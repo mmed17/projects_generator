@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>projectcreatoraio</id>
+	<name>Project Creator A I O</name>
+	<summary>Project creator</summary>
+	<description>App to create projects easily</description>
+	<version>1.0.0</version>
+	<licence>agpl</licence>
+	<author mail="mmed172017@gmail.com" homepage="">med172017</author>
+	<namespace>ProjectCreatorAIO</namespace>
+	<category>customization</category>
+	<bugs>https://github.com/mmed17/projects_generator/issues</bugs>
+	<dependencies>
+		<nextcloud min-version="29" max-version="31"/>
+	</dependencies>
+	<navigations>
+		<navigation>
+			<id>projectcreatoraio</id>
+			<name>Project Creator A I O</name>
+			<route>projectcreatoraio.page.index</route>
+			<icon>app.svg</icon>
+			<type>link</type>
+		</navigation>
+	</navigations>
+</info>
