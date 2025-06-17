@@ -32,17 +32,26 @@
 							required />
 					</div>
 
+					<!-- Project description -->
+					<div class="form-row">
+						<NcTextArea
+							v-model="projectDescription"
+							class="form-row-item"
+							label="Project description"
+							placeholder="Provide some details"
+							required
+							rows="4"
+						/>
+					</div>
+
 					<!-- Project Number & Type (in a row) -->
 					<div class="form-row">
-						<NcSelect
-							v-model="projectType"
+						<NcSelect v-model="projectType"
 							class="form-row-item"
-							label="Project Type"
 							placeholder="Select project type"
-							option-value="value"
-							option-label="label"
-							:options="projectTypeOptions"
-							:no-wrap="false"
+							input-label="Project Type"
+							:options="types"
+							:show-label="true"
 							:multiple="false"
 							required />
 					</div>
@@ -59,15 +68,17 @@
 
 					<!-- Project Members -->
 					<div class="form-row">
-						<NcSelect
-							v-model="selectedMembers"
+						<NcSelectUsers :options="users"
 							class="form-row-item"
-							label="Project Members"
-							:options="userOptions"
-							:no-wrap="false"
-							placeholder="Select team members..."
-							required
-							multiple />
+							:model-value="selectedUsers"
+							:multiple="true"
+							:keep-open="true"
+							:show-label="true"
+							:no-wrap="true"
+							input-label="Project Team Members"
+							placeholder="Select team members"
+							@search="fetchUsers"
+							@update:modelValue="selectedUsers = $event" />
 					</div>
 
 					<!-- Action Button -->
@@ -94,11 +105,13 @@ import {
 	NcButton,
 	NcTextField,
 	NcSelect,
-	NcNoteCard,
-
+	NcNoteCard
 } from '@nextcloud/vue'
-import { onBeforeMount } from 'vue';
+import NcSelectUsers from '@nextcloud/vue/components/NcSelectUsers'
+import NcTextArea from '@nextcloud/vue/components/NcTextArea'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import svgAccountGroup from '@mdi/svg/svg/account-group.svg?raw'
+import svgEmail from '@mdi/svg/svg/email.svg?raw'
 
 export default {
 	name: 'App',
@@ -109,66 +122,61 @@ export default {
 		NcSelect,
 		NcNoteCard,
 		Plus,
+		NcSelectUsers,
+		svgAccountGroup,
+		svgEmail,
+		NcTextArea
 	},
 	data() {
 		return {
-			// Form field models
 			projectName: '',
 			projectNumber: '',
 			projectAddress: '',
 			projectType: '',
-			selectedMembers: [],
+			selectedUsers: [],
 			projectDescription: '',
 
-			// Form status management
 			isLoading: false,
-			submissionStatus: null, // Can be 'success' or 'error'
 			statusMessage: '',
+			submissionStatus: null,
 
-			// Placeholder Data (Replace with real data from Nextcloud API)
-			projectTypeOptions: [],
-			userOptions: [],
+			users: [
+				{
+					uid: '0',
+					id: '0-john',
+					displayName: 'John',
+					isNoUser: false,
+					subname: 'john@example.org',
+				},
+				{
+					uid: '1',
+					id: '2-org@example.org',
+					displayName: 'Organization',
+					isNoUser: true,
+					subname: 'org@example.org',
+					iconSvg: svgEmail,
+					iconName: 'Email icon'
+				}
+			],
+			types: [
+				{ id: 0, label: 'Marketing Campaign' },
+				{ id: 1, label: 'Product Development' },
+				{ id: 2, label: 'Research Project' },
+				{ id: 3, label: 'Event Planning' },
+				{ id: 4, label: 'Consulting Engagement' },
+				{ id: 5, label: 'Training Program' },
+				{ id: 6, label: 'Software Development' },
+				{ id: 7, label: 'Infrastructure Upgrade' },
+				{ id: 8, label: 'Community Outreach' },
+				{ id: 9, label: 'Other' }
+			]
 		};
 	},
-	onBeforeMount() {
-		// This is where you would typically fetch user data from the Nextcloud API
-		// For this example, we're using static data defined in userOptions
-		console.log('--- Fetching User Data ---');
-		console.log('Available Users:', this.userOptions);
-	},
 	methods: {
-		async createProject() {
-			// In a real application, this is where you make your series of HTTP calls
-			// to create the Team, Folder, Deck Board, etc.
-			console.log('--- Submitting Project Data ---')
-			console.log('Name:', this.projectName)
-			console.log('Number:', this.projectNumber)
-			console.log('Address:', this.projectAddress)
-			console.log('Type:', this.projectType)
-			console.log('Description:', this.projectDescription)
-			console.log('Start Date:', this.startDate)
-			console.log('End Date:', this.endDate)
-			console.log('Members:', this.selectedMembers.map(m => m.value)) // Get just the user IDs
-
-			// Simple validation check
-			if (!this.projectName || this.selectedMembers.length === 0) {
-				this.submissionStatus = 'error'
-				this.statusMessage = 'Project Name and Members are required.'
-				return
-			}
-
-			this.isLoading = true
-			this.submissionStatus = null
-
-			// Simulate network request
-			await new Promise(resolve => setTimeout(resolve, 2000))
-
-			// Simulate a successful response
-			this.isLoading = false
-			this.submissionStatus = 'success'
-			this.statusMessage = `Project "${this.projectName}" has been created successfully!`
+		async fetchUsers(query) {
+			console.log('Fetching users with query:', query);
 		},
-	},
+	}
 }
 </script>
 

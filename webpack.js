@@ -13,6 +13,7 @@ webpackConfig.plugins.push(
 		files: 'src',
 	}),
 )
+
 webpackConfig.plugins.push(
 	new StyleLintPlugin({
 		files: 'src/**/*.{css,scss,vue}',
