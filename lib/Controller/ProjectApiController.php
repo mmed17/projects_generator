@@ -55,7 +55,7 @@ class ProjectApiController extends Controller {
         try {
             // 1. Create circle and add members
             $circleMembersId = array_filter($members, fn($memberId) => $memberId !== $currentUser->getUID());
-            $createdCircle = $this->circlesManager->createCircle("{$name} - Team", null, true, true);
+            $createdCircle = $this->circlesManager->createCircle("{$name}_{$number} - Team", null, true, true);
             
             $federatedUsers = [];
             foreach ($circleMembersId as $memberId) {
@@ -65,11 +65,11 @@ class ProjectApiController extends Controller {
             }
 
             // 2. Create board
-            $createdBoard = $this->boardService->create("{$name} - Main Board", $currentUser->getUID(), $this->randomColor());
+            $createdBoard = $this->boardService->create("{$name}_{$number} - Main Board", $currentUser->getUID(), $this->randomColor());
 
             // 3. Create folder
             $userFolder = $this->rootFolder->getUserFolder($currentUser->getUID());
-            $createdFolder = $userFolder->newFolder("{$name} - Main Files");
+            $createdFolder = $userFolder->newFolder("{$name}_{$number} - Main Files");
 
             // 4. Share board with circle
             $this->boardService->addAcl(
@@ -83,6 +83,7 @@ class ProjectApiController extends Controller {
             $this->shareFolderWithCircle($createdFolder, $createdCircle->getSingleId(), $currentUser->getUID());
 
             // 6. Insert project into DB (if applicable)
+            // ...
 
             return new DataResponse([
                 'message' => 'Project created successfully'

@@ -8,9 +8,7 @@
 				</p>
 
 				<!-- Submission Status Message -->
-				<NcNoteCard v-if="submissionStatus"
-					:class="`status-card status-${submissionStatus}`"
-					:icon="submissionStatus === 'success' ? 'check' : 'alert'">
+				<NcNoteCard v-if="submissionStatus" :type="submissionStatus">
 					{{ statusMessage }}
 				</NcNoteCard>
 
@@ -83,7 +81,7 @@
 							placeholder="Select team members"
 							@search="fetchUsers"
 							@update:modelValue="projectMembers = $event" 
-							/>
+						/>
 					</div>
 
 					<!-- Action Button -->
@@ -170,9 +168,10 @@ export default {
 			if (searchTimeout) {
 				clearTimeout(searchTimeout);
 			}
+
+			this.users = [];
 			
 			if (!query.trim()) {
-				this.users = []
 				return;
 			}
 
@@ -234,6 +233,7 @@ export default {
         },
 		async createProject() {
 			this.isCreatingProject = true;
+			this.isMessageVisible = false;
 			this.submissionStatus = '';
 			this.statusMessage = '';
 
@@ -246,8 +246,6 @@ export default {
 				members: this.projectMembers.map(m => m.id)
 			};
 
-			console.log('Creating project with data:', projectData);
-
 			try {
 				const url = generateUrl('/apps/projectcreatoraio/api/v1/projects');
 				const response = await this.$axios.post(url, projectData, {
@@ -257,12 +255,13 @@ export default {
 					}
 				});
 
-				console.log('Project creation response:', response);
-
 				this.submissionStatus = 'success';
 				this.statusMessage = response.data.message || 'Project created successfully!';
+				this.resetForm();
 				
-				// this.resetForm();
+				setTimeout(() => {
+					this.submissionStatus = '';
+				}, 4000);
 
 			} catch (error) {
 				this.submissionStatus = 'error';
@@ -281,8 +280,6 @@ export default {
 			this.projectMembers = [];
 			this.projectDescription = '';
 			this.users = [];
-			this.submissionStatus = '';
-			this.statusMessage = '';
 		}
 	}
 }
