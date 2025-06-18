@@ -9,25 +9,27 @@
 
 				<!-- Submission Status Message -->
 				<NcNoteCard v-if="submissionStatus"
-					:type="submissionStatus === 'success' ? 'success' : 'error'"
-					class="status-card">
-						{{ statusMessage }}
+					:class="`status-card status-${submissionStatus}`"
+					:icon="submissionStatus === 'success' ? 'check' : 'alert'">
+					{{ statusMessage }}
 				</NcNoteCard>
 
 				<form @submit.prevent="createProject">
 					<!-- Project Name -->
 					<div class="form-row">
 						<NcTextField v-model="projectName"
-							label="Project Name"
+							label="Project Name*"
 							class="form-row-item"
 							placeholder="e.g., Q4 Marketing Campaign"
 							:show-label="true"
+							input-label="Project Name"
 							required />
 
 						<NcTextField v-model="projectNumber"
-							label="Project Number"
+							label="Project Number*"
 							placeholder="e.g., P-2025-001"
 							:show-label="true"
+							input-label="Project Number"
 							class="form-row-item"
 							required />
 					</div>
@@ -39,21 +41,10 @@
 							class="form-row-item"
 							label="Project description"
 							placeholder="Provide some details"
-							required
+							:show-label="true"
+							input-label="Project Description"
 							rows="4"
 						/>
-					</div>
-
-					<!-- Project Number & Type (in a row) -->
-					<div class="form-row">
-						<NcSelect v-model="projectType"
-							class="form-row-item"
-							placeholder="Select project type"
-							input-label="Project Type"
-							:options="types"
-							:show-label="true"
-							:multiple="false"
-							required />
 					</div>
 
 					<!-- Project Address -->
@@ -62,7 +53,20 @@
 							class="form-row-item"
 							label="Client Address or Location"
 							placeholder="e.g., 123 Innovation Drive, Tech City"
-							:show-label="true" 
+							:show-label="true"
+							input-label="Client Address or Location"
+							/>
+					</div>
+					
+					<!-- Project Number & Type (in a row) -->
+					<div class="form-row">
+						<NcSelect v-model="projectType"
+							class="form-row-item"
+							placeholder="Select project type"
+							input-label="Project Type*"
+							:options="types"
+							:show-label="true"
+							:multiple="false"
 							required />
 					</div>
 
@@ -70,19 +74,21 @@
 					<div class="form-row">
 						<NcSelectUsers :options="users"
 							class="form-row-item"
-							:model-value="selectedUsers"
+							:model-value="projectMembers"
 							:multiple="true"
 							:keep-open="true"
 							:show-label="true"
 							:no-wrap="true"
-							input-label="Project Team Members"
+							input-label="Project Team Members*"
 							placeholder="Select team members"
 							@search="fetchUsers"
-							@update:modelValue="selectedUsers = $event" />
+							@update:modelValue="projectMembers = $event" 
+							required/>
 					</div>
 
 					<!-- Action Button -->
-					<NcButton :disabled="isLoading"
+					<NcButton 
+							:disabled="isCreatingProject || !projectName || !projectNumber || !projectType || projectMembers.length === 0"
 							type="primary"
 							:wide="true"
 							@click="createProject"
@@ -90,7 +96,7 @@
 						<template #icon>
 							<Plus :size="20" />
 						</template>
-						{{ isLoading ? 'Creating Project...' : 'Create Project' }}
+						{{ isCreatingProject ? 'Creating Project...' : 'Create Project' }}
 					</NcButton>
 				</form>
 			</div>
@@ -112,6 +118,9 @@ import NcTextArea from '@nextcloud/vue/components/NcTextArea'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import svgAccountGroup from '@mdi/svg/svg/account-group.svg?raw'
 import svgEmail from '@mdi/svg/svg/email.svg?raw'
+import { generateUrl } from '@nextcloud/router'
+
+let searchTimeout = null;
 
 export default {
 	name: 'App',
@@ -133,31 +142,15 @@ export default {
 			projectNumber: '',
 			projectAddress: '',
 			projectType: '',
-			selectedUsers: [],
+			projectMembers: [],
 			projectDescription: '',
 
-			isLoading: false,
+			isFetchingUsers: false,
+			isCreatingProject: false,
+			submissionStatus: '',
 			statusMessage: '',
-			submissionStatus: null,
 
-			users: [
-				{
-					uid: '0',
-					id: '0-john',
-					displayName: 'John',
-					isNoUser: false,
-					subname: 'john@example.org',
-				},
-				{
-					uid: '1',
-					id: '2-org@example.org',
-					displayName: 'Organization',
-					isNoUser: true,
-					subname: 'org@example.org',
-					iconSvg: svgEmail,
-					iconName: 'Email icon'
-				}
-			],
+			users: [],
 			types: [
 				{ id: 0, label: 'Marketing Campaign' },
 				{ id: 1, label: 'Product Development' },
@@ -174,8 +167,123 @@ export default {
 	},
 	methods: {
 		async fetchUsers(query) {
-			console.log('Fetching users with query:', query);
+			if (searchTimeout) {
+				clearTimeout(searchTimeout);
+			}
+			
+			if (!query.trim()) {
+				this.users = []
+				return;
+			}
+
+			this.isFetchingUsers = true;
+			searchTimeout = setTimeout(async () => {
+				try {
+					const response = await this.$axios.get('/ocs/v1.php/cloud/users', {
+						params: {
+							search: query,
+							limit: 20
+						},
+						headers: { 
+							'OCS-APIRequest': 'true',
+							'Content-Type': 'application/x-www-form-urlencoded'
+						}
+					});
+
+					const userIds = response.data.ocs.data.users;
+
+					for( let i = 0; i < userIds.length; i++) {
+						const userId = userIds[i];
+						const userDetails = await this.getUserDetails(userId);
+						if(!userDetails) continue;
+						this.users = this.users.concat([{
+							id: userDetails.id,
+							user: userDetails.id,
+							displayName: userDetails.displayName,
+							subname: userDetails.email,
+						}]);
+					}
+
+				} catch (error) {
+					console.error('Error fetching users:', error);
+				} finally {
+					this.isFetchingUsers = false;
+				}
+				
+			}, 300);
 		},
+		async getUserDetails(userId) {
+            try {
+                const response = await this.$axios.get(`/ocs/v1.php/cloud/users/${userId}`, {
+					headers: {
+						'OCS-APIRequest': 'true',
+						'Content-Type': 'application/x-www-form-urlencoded'
+					}
+				});
+
+				const details = response.data.ocs.data;
+				return {
+					id: details.id,
+					displayName: details.displayname,
+					email: details.email ?? details.phone,
+					status: details.status
+				};
+            } catch (error) {
+                console.error(`Error getting details for user ${userId}:`, error);
+            }
+        },
+		async createProject() {
+			this.isCreatingProject = true;
+			this.submissionStatus = '';
+			this.statusMessage = '';
+
+			const projectData = {
+				name: this.projectName.trim(),
+				number: this.projectNumber.trim(),
+				description: this.projectDescription.trim(),
+				type: this.projectType.id,
+				address: this.projectAddress.trim(),
+				members: this.projectMembers.map(m => m.id)
+			};
+
+			console.log('Creating project with data:', projectData);
+
+			try {
+				const url = generateUrl('/apps/projectcreatoraio/api/v1/projects');
+				const response = await this.$axios.post(url, projectData, {
+					headers: {
+						'OCS-APIRequest': 'true',
+						'Content-Type': 'application/json'
+					}
+				});
+
+				console.log('Project creation response:', response);
+
+				this.submissionStatus = 'success';
+				this.statusMessage = response.data.message || 'Project created successfully!';
+				
+				this.resetForm();
+
+			} catch (error) {
+				this.submissionStatus = 'error';
+				this.statusMessage = error.message || 'An unknown error occurred.';
+				console.error('Error creating project:', error);
+
+			} finally {
+				this.isCreatingProject = false;
+			}
+		},
+		resetForm() {
+			this.projectName = ' ';
+			this.projectNumber = ' ';
+			this.projectAddress = ' ';
+			this.projectType = ' ';
+			this.projectMembers = [];
+			this.projectDescription = '';
+			this.users = [];
+			this.submissionStatus = '';
+			this.statusMessage = '';
+		}
 	}
 }
 </script>
@@ -193,7 +301,7 @@ export default {
 	width: 100%;
 	display: flex;
 	flex-direction: column;
-	gap: 24px; /* Space between form elements */
+	gap: 24px;
 }
 
 .project-creator-title {
@@ -206,7 +314,7 @@ export default {
 .project-creator-subtitle {
 	font-size: 1.1em;
 	color: var(--color-text-maxcontrast);
-	margin-top: -16px; /* Bring subtitle closer to title */
+	margin-top: -16px;
 	margin-bottom: 16px;
 }
 
@@ -220,16 +328,15 @@ export default {
 
 .form-row-item {
 	flex: 1;
-	margin: 0px !important; /* Reset margin for form items */
 }
 
 .submit-button {
 	margin-top: 16px;
-	height: 44px; /* Taller button for emphasis */
+	height: 44px; 
 	font-size: 1.1em;
 }
 
 .status-card {
-	margin-bottom: -8px; /* Reduce gap if a card is shown */
+	margin-bottom: -8px;
 }
 </style>
