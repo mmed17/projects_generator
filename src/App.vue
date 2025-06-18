@@ -23,7 +23,7 @@
 							placeholder="e.g., Q4 Marketing Campaign"
 							:show-label="true"
 							input-label="Project Name"
-							required />
+							/>
 
 						<NcTextField v-model="projectNumber"
 							label="Project Number*"
@@ -31,7 +31,7 @@
 							:show-label="true"
 							input-label="Project Number"
 							class="form-row-item"
-							required />
+							/>
 					</div>
 
 					<!-- Project description -->
@@ -67,7 +67,7 @@
 							:options="types"
 							:show-label="true"
 							:multiple="false"
-							required />
+							/>
 					</div>
 
 					<!-- Project Members -->
@@ -83,7 +83,7 @@
 							placeholder="Select team members"
 							@search="fetchUsers"
 							@update:modelValue="projectMembers = $event" 
-							required/>
+							/>
 					</div>
 
 					<!-- Action Button -->
@@ -262,7 +262,7 @@ export default {
 				this.submissionStatus = 'success';
 				this.statusMessage = response.data.message || 'Project created successfully!';
 				
-				this.resetForm();
+				// this.resetForm();
 
 			} catch (error) {
 				this.submissionStatus = 'error';
@@ -274,10 +274,10 @@ export default {
 			}
 		},
 		resetForm() {
-			this.projectName = ' ';
-			this.projectNumber = ' ';
-			this.projectAddress = ' ';
-			this.projectType = ' ';
+			this.projectName = '';
+			this.projectNumber = '';
+			this.projectAddress = '';
+			this.projectType = '';
 			this.projectMembers = [];
 			this.projectDescription = '';
 			this.users = [];

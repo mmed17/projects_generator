@@ -15,7 +15,7 @@ return [
         [
             "name" => "project_api#delete",
             "url" => "/api/v1/projects/{id}",
-            "verb" => "DELETE"
+            "verb" => "DELETE"  
         ],
         [
             "name" => "project_api#list",

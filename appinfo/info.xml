@@ -13,6 +13,7 @@
 	<bugs>https://github.com/mmed17/projects_generator/issues</bugs>
 	<dependencies>
 		<nextcloud min-version="29" max-version="31"/>
+		<app id="circles" min-version="1.0.0"/>
 	</dependencies>
 	<navigations>
 		<navigation>
