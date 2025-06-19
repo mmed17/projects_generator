@@ -20,6 +20,9 @@
 		<app id="deck" />
 		<app id="files" />
 	</dependencies>
+	<dashboard>
+		<widget>projectcreatoraio</widget>
+	</dashboard>
 	<navigations>
 		<navigation>
 			<id>projectcreatoraio</id>

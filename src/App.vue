@@ -190,18 +190,21 @@ export default {
 					});
 
 					const userIds = response.data.ocs.data.users;
-
+					const fullUsers = [];
 					for( let i = 0; i < userIds.length; i++) {
 						const userId = userIds[i];
 						const userDetails = await this.getUserDetails(userId);
 						if(!userDetails) continue;
-						this.users = this.users.concat([{
+						
+						fullUsers.push({
 							id: userDetails.id,
 							user: userDetails.id,
 							displayName: userDetails.displayName,
-							subname: userDetails.email,
-						}]);
+							subname: userDetails.email
+						});
 					}
+
+					this.users = fullUsers;
 
 				} catch (error) {
 					console.error('Error fetching users:', error);

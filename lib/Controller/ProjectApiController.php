@@ -15,8 +15,6 @@ use OCP\Files\Node;
 use OCP\Share;
 use OCP\Constants;
 use OCA\ProjectCreatorAIO\Db\ProjectMapper;
-use OCA\ProjectCreatorAIO\Db\Project;
-use OCP\AppFramework\Http\Attribute\UseSession;
 use OCA\Circles\Model\Member;
 
 class ProjectApiController extends Controller {
@@ -121,7 +119,7 @@ class ProjectApiController extends Controller {
                 $this->boardService->delete($createdBoard->id);
             }
 
-            if ($createdCircle!== null) {
+            if ($createdCircle !== null) {
                 $federatedUser = $this->circlesManager->getFederatedUser($currentUser->getUID(), Member::TYPE_USER);
                 $this->circlesManager->startSession($federatedUser);
                 $this->circlesManager->destroyCircle($createdCircle->getSingleId());
