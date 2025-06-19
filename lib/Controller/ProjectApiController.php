@@ -12,7 +12,10 @@ use OCA\Deck\Service\BoardService;
 use OCP\Files\IRootFolder;
 use OCP\Share\IManager as IShareManager;
 use OCP\Files\Node;
-use OCA\Deck\Service\ShareService;
+use OCP\Share;
+use OCP\Constants;
+use OCA\ProjectCreatorAIO\Db\ProjectMapper;
+use OCA\ProjectCreatorAIO\Db\Project;
 
 class ProjectApiController extends Controller {
 
@@ -25,6 +28,7 @@ class ProjectApiController extends Controller {
         protected BoardService $boardService,
         protected IRootFolder $rootFolder,
         protected FederatedUserService $federatedUserService,
+        protected ProjectMapper $projectMapper,
     ) {
         parent::__construct($appName, $request);
         $this->request = $request;
@@ -47,6 +51,7 @@ class ProjectApiController extends Controller {
         string $description = '',
     ): DataResponse {
         $currentUser = $this->userSession->getUser();
+        $timestamp = (new \DateTime())->format('YmdHis');
 
         $createdCircle = null;
         $createdBoard  = null;
@@ -55,7 +60,7 @@ class ProjectApiController extends Controller {
         try {
             // 1. Create circle and add members
             $circleMembersId = array_filter($members, fn($memberId) => $memberId !== $currentUser->getUID());
-            $createdCircle = $this->circlesManager->createCircle("{$name}_{$number} - Team", null, true, true);
+            $createdCircle = $this->circlesManager->createCircle("{$name} - Team", null, true, true);
             
             $federatedUsers = [];
             foreach ($circleMembersId as $memberId) {
@@ -65,16 +70,17 @@ class ProjectApiController extends Controller {
             }
 
             // 2. Create board
-            $createdBoard = $this->boardService->create("{$name}_{$number} - Main Board", $currentUser->getUID(), $this->randomColor());
+            $createdBoard = $this->boardService->create("{$name} - Main Board", $currentUser->getUID(), $this->randomColor());
 
             // 3. Create folder
+            $folderName = "{$name}:{$timestamp} - Main Files";
             $userFolder = $this->rootFolder->getUserFolder($currentUser->getUID());
-            $createdFolder = $userFolder->newFolder("{$name}_{$number} - Main Files");
-
+            $createdFolder = $userFolder->newFolder($folderName);
+            
             // 4. Share board with circle
             $this->boardService->addAcl(
                 $createdBoard->id,
-                \OCP\Share::SHARE_TYPE_CIRCLE,
+                Share::SHARE_TYPE_CIRCLE,
                 $createdCircle->getSingleId(),
                 false, false, false
             );
@@ -83,14 +89,24 @@ class ProjectApiController extends Controller {
             $this->shareFolderWithCircle($createdFolder, $createdCircle->getSingleId(), $currentUser->getUID());
 
             // 6. Insert project into DB (if applicable)
-            // ...
-
+            $projectId = $this->projectMapper->createProject(
+                $name, 
+                $number, 
+                $type, 
+                $address, 
+                $description, 
+                $currentUser->getUID(), 
+                $createdCircle->getSingleId(), 
+                $createdBoard->id, 
+                $folderName,
+            );
+            
             return new DataResponse([
-                'message' => 'Project created successfully'
+                'message' => 'Project created successfully',
+                'project' => $projectId,
             ]);
 
         } catch (\Throwable $e) {
-            // Rollback on error
             if ($createdFolder !== null && $createdFolder->isDeletable()) {
                 $createdFolder->delete();
             }
@@ -99,9 +115,9 @@ class ProjectApiController extends Controller {
                 $this->boardService->delete($createdBoard->id);
             }
 
-            if ($createdCircle !== null) {
-                $this->circlesManager->destroyCircle($createdCircle->getSingleId());
-            }
+            // if ($createdCircle !== null) {
+            //     $this->circlesManager->destroyCircle($createdCircle->getSingleId());
+            // }
 
             return new DataResponse([
                 'message' => 'Failed to create project: ' . $e->getMessage()
@@ -120,9 +136,9 @@ class ProjectApiController extends Controller {
 
             $share = $this->shareManager->newShare();
             $share->setNode($folder);
-            $share->setShareType(\OCP\Share::SHARE_TYPE_CIRCLE);
+            $share->setShareType(Share::SHARE_TYPE_CIRCLE);
             $share->setSharedWith($circleId);
-            $share->setPermissions(\OCP\Constants::PERMISSION_READ);
+            $share->setPermissions(Constants::PERMISSION_READ);
             $share->setSharedBy($userId);
             $share->setShareOwner($userId);
 

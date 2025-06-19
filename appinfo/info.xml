@@ -3,14 +3,17 @@
 	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>projectcreatoraio</id>
 	<name>Projects</name>
-	<summary>Projects manager</summary>
-	<description>App to manage projects easily</description>
+	<summary>Projects creator</summary>
+	<description>App to create projects easily</description>
 	<version>1.0.0</version>
 	<licence>agpl</licence>
 	<author mail="mmed172017@gmail.com" homepage="">med172017</author>
 	<namespace>ProjectCreatorAIO</namespace>
 	<category>customization</category>
 	<bugs>https://github.com/mmed17/projects_generator/issues</bugs>
+	<migrations>
+		<version>Version0001DateTime20251906153814</version>
+	</migrations>
 	<dependencies>
 		<nextcloud min-version="29" max-version="31"/>
 		<app id="circles"/>

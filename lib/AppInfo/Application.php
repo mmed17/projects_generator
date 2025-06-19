@@ -12,7 +12,7 @@ use OCA\Circles\Service\FederatedUserService;
 use OCA\Deck\Service\BoardService;
 use OCP\Files\IRootFolder;
 use OCP\Share\IManager;
-use OCA\Deck\Service\ShareService;
+use OCA\ProjectCreatorAIO\Db\ProjectMapper;
 
 class Application extends App implements IBootstrap {
     public const APP_ID = 'projectcreatoraio';
@@ -34,6 +34,7 @@ class Application extends App implements IBootstrap {
 				boardService: $c->query(BoardService::class),
 				rootFolder: $c->query(IRootFolder::class),
 				federatedUserService: $c->query(FederatedUserService::class),
+				projectMapper: $c->query(ProjectMapper::class)
 			)
 		);
 	}
