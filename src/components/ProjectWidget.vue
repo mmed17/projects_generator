@@ -1,65 +1,84 @@
 <template>
-	<div class="project-widget">
+    <div class="project-widget">
         <NcTextField v-model="searchQuery"
             :label="t('your_app_name', 'Search Projects')"
             :placeholder="t('your_app_name', 'e.g: Project Alpha...')"
-			trailing-button-icon="close"
+            trailing-button-icon="close"
             @input="searchProjects">
-			<template #icon>
-				<Magnify :size="20" />
-			</template>
-		</NcTextField>
+            <template #icon>
+                <Magnify :size="20" />
+            </template>
+        </NcTextField>
 
-		<div v-if="loading" class="loading-placeholder">
-			<NcLoadingIcon :size="44" />
-		</div>
-
-		<NcEmptyContent v-else-if="projects.length === 0"
+        <div v-if="loading" class="loading-placeholder">
+            <NcLoadingIcon :size="44" />
+        </div>
+        <NcEmptyContent v-else-if="projects.length === 0"
             :name="t('your_app_name', 'No projects found')">
-			<template #icon>
+            <template #icon>
                 <NcIconSvgWrapper :svg="folderSvg" />
             </template>
-		</NcEmptyContent>
+        </NcEmptyContent>
 
-		<div v-else class="project-list">
-			<NcNoteCard v-for="project in filteredProjects" :key="project.name" class="project-card">
-				<template #header>
-					<div class="project-header">
-						<Folder :size="20" class="icon" />
-						<h3>{{ project.name }}</h3>
-					</div>
-				</template>
-				<ul class="file-list">
-					<li v-for="file in project.files" :key="file.name" class="file-item">
-						<span class="file-name">{{ file.name }}</span>
-						<NcActions>
-							<NcActionButton
-								icon="icon-download"
-								:title="t('your_app_name', 'Download')"
-								@click="downloadFile(file.download_url)" />
-						</NcActions>
-					</li>
-					<li v-if="project.files.length === 0" class="empty-files">
-						{{ t('your_app_name', 'This project is empty') }}
-					</li>
-				</ul>
-			</NcNoteCard>
-		</div>
-	</div>
+        <div v-else class="project-list">
+            <ul>
+                <NcListItem
+                    v-for="project in filteredProjects"
+                    :name="project.name"
+                    :force-display-actions="true">
+                    <template #icon>
+                        <FolderOutline :size="30" />
+                    </template>
+                    
+                    <template #subname>
+                        {{ types[project.type].label }}
+                    </template>
+
+                    <template #actions>
+                        <NcActionButton
+                            icon="icon-download"
+                            :title="t('your_app_name', 'Download project')"
+                            @click="downloadFile(project.downloadUrl)">
+                        </NcActionButton>
+                        <NcActionButton
+                            icon="icon-details"
+                            :title="t('your_app_name', 'View details')">
+                        </NcActionButton>
+                    </template>
+                </NcListItem>
+            </ul>
+        </div>
+    </div>
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
-import { generateOcsUrl } from '@nextcloud/router'
 import { NcActions, NcActionButton, NcEmptyContent, NcNoteCard, NcTextField } from '@nextcloud/vue'
-import { t } from '@nextcloud/l10n'
-
-import Folder from 'vue-material-design-icons/Folder.vue'
-import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import NcListItem from '@nextcloud/vue/components/NcListItem'
+import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
+
+import { t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
+
+import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
+import Download from 'vue-material-design-icons/Download.vue';
+import Details from 'vue-material-design-icons/Details.vue';
 import folderSvg from '@mdi/svg/svg/folder.svg?raw'
+import axios from 'axios';
+
+const types = [
+	{ id: 0, label: 'Marketing Campaign' },
+	{ id: 1, label: 'Product Development' },
+	{ id: 2, label: 'Research Project' },
+	{ id: 3, label: 'Event Planning' },
+	{ id: 4, label: 'Consulting Engagement' },
+	{ id: 5, label: 'Training Program' },
+	{ id: 6, label: 'Software Development' },
+	{ id: 7, label: 'Infrastructure Upgrade' },
+	{ id: 8, label: 'Community Outreach' },
+	{ id: 9, label: 'Other' }
+];
 
 export default {
 	name: 'ProjectWidget',
@@ -70,11 +89,13 @@ export default {
 		NcNoteCard,
 		NcLoadingIcon,
 		NcTextField,
-		Folder,
 		FolderOutline,
         NcIconSvgWrapper,
         Magnify,
-        folderSvg
+        folderSvg,
+        NcListItem,
+        Download,
+        Details
 	},
 	data() {
 		return {
@@ -82,39 +103,50 @@ export default {
 			loading: true,
 			searchQuery: '',
 			t,
-            folderSvg
+            folderSvg,
+            types
 		}
 	},
 	computed: {
 		filteredProjects() {
 			if (!this.searchQuery) {
-				return this.projects
+				return this.projects;
 			}
+
 			return this.projects.filter(project => {
-				return project.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-			})
+				return project.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+			});
 		},
 	},
 	async mounted() {
-		await this.fetchProjects()
+        const panelContent = this.$el.closest('.panel--content');
+        if (panelContent) {
+            panelContent.style.overflowY = 'scroll';
+        }
+
+        await this.fetchProjects();
 	},
 	methods: {
 		async fetchProjects() {
 			this.loading = true
-			// try {
-			// 	// Remember to replace 'your_app_name' with the actual ID of your app
-			// 	const url = generateOcsUrl('/apps/your_app_name/api/v1/projects')
-			// 	const response = await axios.get(url)
-			// 	this.projects = response.data.ocs.data
-			// } catch (e) {
-			// 	console.error('Failed to fetch projects:', e)
-			// 	// You could use NcToast to show an error message
-			// } finally {
-			// 	this.loading = false
-			// }
-		},
-		searchProjects() {
-			// The computed property 'filteredProjects' handles the filtering reactively
+			try {
+				const url = generateUrl('/apps/projectcreatoraio/api/v1/projects/list')
+				const response = await axios.get(url, {
+                    headers: {
+						'OCS-APIRequest': 'true',
+						'Content-Type': 'application/json'
+					}
+                });
+
+				this.projects = response.data ?? [];
+                
+                console.log(this.projects);
+
+			} catch (e) {
+				console.error('Failed to fetch projects:', e);
+			} finally {
+				this.loading = false
+			}
 		},
 		downloadFile(url) {
 			// A simple way to trigger a download
@@ -135,6 +167,7 @@ export default {
 	justify-content: center;
 	align-items: center;
 	min-height: 150px;
+    padding-top: 5px;
 }
 
 .project-card {
@@ -181,5 +214,18 @@ export default {
 	padding: 8px 4px;
 	color: var(--color-text-maxcontrast);
 	font-style: italic;
+}
+
+.project-widget {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 16px;
+}
+
+.project-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 </style>

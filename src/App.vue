@@ -117,8 +117,21 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import svgAccountGroup from '@mdi/svg/svg/account-group.svg?raw'
 import svgEmail from '@mdi/svg/svg/email.svg?raw'
 import { generateUrl } from '@nextcloud/router'
+import axios from 'axios'
 
 let searchTimeout = null;
+const types = [
+	{ id: 0, label: 'Marketing Campaign' },
+	{ id: 1, label: 'Product Development' },
+	{ id: 2, label: 'Research Project' },
+	{ id: 3, label: 'Event Planning' },
+	{ id: 4, label: 'Consulting Engagement' },
+	{ id: 5, label: 'Training Program' },
+	{ id: 6, label: 'Software Development' },
+	{ id: 7, label: 'Infrastructure Upgrade' },
+	{ id: 8, label: 'Community Outreach' },
+	{ id: 9, label: 'Other' }
+];
 
 export default {
 	name: 'App',
@@ -149,18 +162,7 @@ export default {
 			statusMessage: '',
 
 			users: [],
-			types: [
-				{ id: 0, label: 'Marketing Campaign' },
-				{ id: 1, label: 'Product Development' },
-				{ id: 2, label: 'Research Project' },
-				{ id: 3, label: 'Event Planning' },
-				{ id: 4, label: 'Consulting Engagement' },
-				{ id: 5, label: 'Training Program' },
-				{ id: 6, label: 'Software Development' },
-				{ id: 7, label: 'Infrastructure Upgrade' },
-				{ id: 8, label: 'Community Outreach' },
-				{ id: 9, label: 'Other' }
-			]
+			types
 		};
 	},
 	methods: {
@@ -178,7 +180,7 @@ export default {
 			this.isFetchingUsers = true;
 			searchTimeout = setTimeout(async () => {
 				try {
-					const response = await this.$axios.get('/ocs/v1.php/cloud/users', {
+					const response = await axios.get('/ocs/v1.php/cloud/users', {
 						params: {
 							search: query,
 							limit: 20
@@ -216,7 +218,7 @@ export default {
 		},
 		async getUserDetails(userId) {
             try {
-                const response = await this.$axios.get(`/ocs/v1.php/cloud/users/${userId}`, {
+                const response = await axios.get(`/ocs/v1.php/cloud/users/${userId}`, {
 					headers: {
 						'OCS-APIRequest': 'true',
 						'Content-Type': 'application/x-www-form-urlencoded'
@@ -251,7 +253,7 @@ export default {
 
 			try {
 				const url = generateUrl('/apps/projectcreatoraio/api/v1/projects');
-				const response = await this.$axios.post(url, projectData, {
+				const response = await axios.post(url, projectData, {
 					headers: {
 						'OCS-APIRequest': 'true',
 						'Content-Type': 'application/json'

@@ -18,7 +18,6 @@ use OCA\ProjectCreatorAIO\Db\ProjectMapper;
 use OCA\Circles\Model\Member;
 
 class ProjectApiController extends Controller {
-
     public function __construct(
         string $appName,
         IRequest $request,
@@ -35,6 +34,31 @@ class ProjectApiController extends Controller {
         $this->circlesManager->startSession();
     }
 
+    public function randomColor(): string {
+        $randomInt = random_int(0, 0xFFFFFF);
+        return strtoupper(sprintf('%06X', $randomInt));
+    }
+
+    public function shareFolderWithCircle(Node $folder, string $circleId, string $userId): void {
+        try {
+
+            $share = $this->shareManager->newShare();
+            $share->setNode($folder);
+            $share->setShareType(Share::SHARE_TYPE_CIRCLE);
+            $share->setSharedWith($circleId);
+            $share->setPermissions(Constants::PERMISSION_READ);
+            $share->setSharedBy($userId);
+            $share->setShareOwner($userId);
+
+            $this->shareManager->createShare($share);
+
+        } catch (NotFoundException $e) {
+            throw new \Exception("Folder not found");
+        } catch (\Throwable $e) {
+            throw new \Exception("Failed to share folder: ". $e->getMessage());
+        }
+    }
+
     /**
      * Create a new project
      * 
@@ -42,7 +66,6 @@ class ProjectApiController extends Controller {
      * 
      * @NoCSRFRequired
      */
-    # // <-- Corrected attribute syntax
     public function create(
         string $name,
         string $number,
@@ -132,28 +155,29 @@ class ProjectApiController extends Controller {
     }
 
 
-    public function randomColor(): string {
-        $randomInt = random_int(0, 0xFFFFFF);
-        return strtoupper(sprintf('%06X', $randomInt));
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @QueryParam(name="search", type="string", nullable=true)
+     * @QueryParam(name="limit", type="int", nullable=true)
+     * @QueryParam(name="offset", type="int", nullable=true)
+     * 
+     *  @return DataResponse
+     */
+    public function search(?string $search = '', ?int $limit = 20, ?int $offset = 0): DataResponse {
+        $results = $this->projectMapper->search($search, $limit, $offset);
+        return new DataResponse($results);
     }
 
-    public function shareFolderWithCircle(Node $folder, string $circleId, string $userId): void {
-        try {
-
-            $share = $this->shareManager->newShare();
-            $share->setNode($folder);
-            $share->setShareType(Share::SHARE_TYPE_CIRCLE);
-            $share->setSharedWith($circleId);
-            $share->setPermissions(Constants::PERMISSION_READ);
-            $share->setSharedBy($userId);
-            $share->setShareOwner($userId);
-
-            $this->shareManager->createShare($share);
-
-        } catch (NotFoundException $e) {
-            throw new \Exception("Folder not found");
-        } catch (\Throwable $e) {
-            throw new \Exception("Failed to share folder: ". $e->getMessage());
-        }
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     *  @return DataResponse
+     */
+    public function list(): DataResponse {
+        $results = $this->projectMapper->list();
+        return new DataResponse($results);
     }
 }

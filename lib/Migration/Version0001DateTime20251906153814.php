@@ -50,7 +50,14 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
             $table->addColumn('folder_name', 'string', [
                 'notnull' => true,
             ]);
+
+            $table->addColumn('created_at', 'datetime', ['notnull' => true]);
+            $table->addColumn('updated_at','datetime', ['notnull' => true]);
+
             $table->setPrimaryKey(['id']);
+            $table->addOption('mysql_engine', 'InnoDB');
+            $table->addIndex(['name'],'projectNameIndex', ['fulltext']);
+            $table->addIndex(['owner_id'],'projectOwnerIdIndex', []);
         }
         
         return $schema;

@@ -1,6 +1,7 @@
 <?php
 namespace OCA\ProjectCreatorAIO\Db;
 
+use DateTime;
 use OCP\AppFramework\Db\Entity;
 use OCP\DB\Types;
 
@@ -17,9 +18,10 @@ class Project extends Entity implements \JsonSerializable {
     protected ?string $circleId    = null;
     protected ?string $boardId     = null;
     protected ?string $folderName  = null;
+    protected ?DateTime $createdAt   = null;
+    protected ?DateTime $updatedAt = null;
 
     public function __construct() {
-        // register your fields
         $this->addType('name',        Types::STRING);
         $this->addType('number',      Types::STRING);
         $this->addType('type',        Types::INTEGER);
@@ -29,6 +31,8 @@ class Project extends Entity implements \JsonSerializable {
         $this->addType('circleId',    Types::STRING);
         $this->addType('boardId',     Types::STRING);
         $this->addType('folderName',  Types::STRING);
+        $this->addType('createdAt',   Types::DATETIME);
+        $this->addType('updatedAt',   Types::DATETIME);
     }
 
     #[\ReturnTypeWillChange]
@@ -44,6 +48,8 @@ class Project extends Entity implements \JsonSerializable {
             'circleId'    => $this->circleId,
             'boardId'     => $this->boardId,
             'folderName'  => $this->folderName,
+            'createdAt'   => $this->createdAt,
+            'updatedAt'   => $this->updatedAt
         ];
     }
 }
