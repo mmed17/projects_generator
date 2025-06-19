@@ -16,6 +16,8 @@ use OCP\Share;
 use OCP\Constants;
 use OCA\ProjectCreatorAIO\Db\ProjectMapper;
 use OCA\ProjectCreatorAIO\Db\Project;
+use OCP\AppFramework\Http\Attribute\UseSession;
+use OCA\Circles\Model\Member;
 
 class ProjectApiController extends Controller {
 
@@ -32,7 +34,7 @@ class ProjectApiController extends Controller {
     ) {
         parent::__construct($appName, $request);
         $this->request = $request;
-        $this->federatedUserService->initCurrentUser();
+        $this->circlesManager->startSession();
     }
 
     /**
@@ -42,6 +44,7 @@ class ProjectApiController extends Controller {
      * 
      * @NoCSRFRequired
      */
+    # // <-- Corrected attribute syntax
     public function create(
         string $name,
         string $number,
@@ -50,23 +53,26 @@ class ProjectApiController extends Controller {
         string $address = '',
         string $description = '',
     ): DataResponse {
-        $currentUser = $this->userSession->getUser();
-        $timestamp = (new \DateTime())->format('YmdHis');
 
         $createdCircle = null;
         $createdBoard  = null;
         $createdFolder = null;
 
         try {
+            $currentUser = $this->userSession->getUser();
+            $timestamp = (new \DateTime())->format('YmdHis');
+
             // 1. Create circle and add members
-            $circleMembersId = array_filter($members, fn($memberId) => $memberId !== $currentUser->getUID());
+            $circleMembersId = array_filter(
+                $members, 
+                fn($memberId) => $memberId!== $currentUser->getUID()
+            );
+
             $createdCircle = $this->circlesManager->createCircle("{$name} - Team", null, true, true);
             
-            $federatedUsers = [];
             foreach ($circleMembersId as $memberId) {
                 $federatedUser = $this->federatedUserService->getLocalFederatedUser($memberId, true, true);
                 $this->circlesManager->addMember($createdCircle->getSingleId(), $federatedUser);
-                $federatedUsers[] = $federatedUser;
             }
 
             // 2. Create board
@@ -77,7 +83,7 @@ class ProjectApiController extends Controller {
             $userFolder = $this->rootFolder->getUserFolder($currentUser->getUID());
             $createdFolder = $userFolder->newFolder($folderName);
             
-            // 4. Share board with circle
+            // 4. Share board with circle 
             $this->boardService->addAcl(
                 $createdBoard->id,
                 Share::SHARE_TYPE_CIRCLE,
@@ -89,7 +95,7 @@ class ProjectApiController extends Controller {
             $this->shareFolderWithCircle($createdFolder, $createdCircle->getSingleId(), $currentUser->getUID());
 
             // 6. Insert project into DB (if applicable)
-            $projectId = $this->projectMapper->createProject(
+            $project = $this->projectMapper->createProject(
                 $name, 
                 $number, 
                 $type, 
@@ -97,30 +103,32 @@ class ProjectApiController extends Controller {
                 $description, 
                 $currentUser->getUID(), 
                 $createdCircle->getSingleId(), 
-                $createdBoard->id, 
-                $folderName,
+                $createdBoard->id,
+                $folderName
             );
-            
+
             return new DataResponse([
                 'message' => 'Project created successfully',
-                'project' => $projectId,
+                'projectId' => $project->id,
             ]);
 
         } catch (\Throwable $e) {
-            if ($createdFolder !== null && $createdFolder->isDeletable()) {
+            if ($createdFolder!== null && $createdFolder->isDeletable()) {
                 $createdFolder->delete();
             }
 
-            if ($createdBoard !== null) {
+            if ($createdBoard!== null) {
                 $this->boardService->delete($createdBoard->id);
             }
 
-            // if ($createdCircle !== null) {
-            //     $this->circlesManager->destroyCircle($createdCircle->getSingleId());
-            // }
-
+            if ($createdCircle!== null) {
+                $federatedUser = $this->circlesManager->getFederatedUser($currentUser->getUID(), Member::TYPE_USER);
+                $this->circlesManager->startSession($federatedUser);
+                $this->circlesManager->destroyCircle($createdCircle->getSingleId());
+            }
+            
             return new DataResponse([
-                'message' => 'Failed to create project: ' . $e->getMessage()
+                'message' => 'Failed to create project: '. $e->getMessage()
             ], 500);
         }
     }
@@ -147,7 +155,7 @@ class ProjectApiController extends Controller {
         } catch (NotFoundException $e) {
             throw new \Exception("Folder not found");
         } catch (\Throwable $e) {
-            throw new \Exception("Failed to share folder: " . $e->getMessage());
+            throw new \Exception("Failed to share folder: ". $e->getMessage());
         }
     }
 }
