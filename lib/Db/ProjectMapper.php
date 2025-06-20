@@ -56,13 +56,31 @@ class ProjectMapper extends QBMapper {
         return $this->findEntities($qb);
     }
 
-    public function list() {
+    public function list(string $ownerId) {
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('*')
            ->from(self::TABLE_NAME)
+           ->where($qb->expr()->eq('owner_id', $qb->createNamedParameter($ownerId)))
            ->orderBy('created_at', 'DESC');
         
+        return $this->findEntities($qb);
+    }
+
+    public function getUserProjects(string $userId): array {
+        $qb = $this->db->getQueryBuilder();
+
+        $qb->select('p.*')
+            ->from('custom_projects', 'p')
+            ->innerJoin(
+                'p',
+                'circles_member',
+                'm',
+                $qb->expr()->eq('p.circle_id', 'm.circle_id')
+            )
+            ->where($qb->expr()->eq('m.user_id', $qb->createNamedParameter($userId)))
+            ->orderBy('p.created_at', 'DESC');
+
         return $this->findEntities($qb);
     }
 }

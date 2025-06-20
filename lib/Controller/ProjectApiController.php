@@ -156,7 +156,6 @@ class ProjectApiController extends Controller {
 
 
     /**
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @QueryParam(name="search", type="string", nullable=true)
@@ -171,13 +170,23 @@ class ProjectApiController extends Controller {
     }
 
     /**
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      *  @return DataResponse
      */
     public function list(): DataResponse {
-        $results = $this->projectMapper->list();
+        $currentUser = $this->userSession->getUser();
+        $results = $this->projectMapper->list($currentUser->getUID());
+        return new DataResponse($results);
+    }
+
+    /**
+     * @NoCSRFRequired
+     * 
+     * @return DataResponse
+     */
+    public function getUserProjects(string $userId): DataResponse {
+        $results = $this->projectMapper->getUserProjects($userId);
         return new DataResponse($results);
     }
 }

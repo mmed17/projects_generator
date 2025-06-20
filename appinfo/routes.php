@@ -18,6 +18,11 @@ return [
             "verb" => "GET",
         ],
         [
+            "name" => "project_api#getUserProjects",
+            "url" => "/api/v1/users/{userId}/projects",
+            "verb" => "GET",
+        ],
+        [
             "name" => "page#index",
             "url" => "/",
             "verb" => "GET",

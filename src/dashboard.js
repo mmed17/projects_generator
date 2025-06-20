@@ -1,14 +1,11 @@
 
-import ProjectWidget from './components/ProjectWidget.vue'
+import ProjectsWidget from './components/ProjectsWidget.vue'
 import Vue from 'vue'
-
-const APP_ID = 'projectcreatoraio';
+import { APP_ID } from "./macros/app-id.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     OCA.Dashboard.register(APP_ID, (el) => {
-        const View = Vue.extend(ProjectWidget);
-        const vm = new View({
-            propsData: {},
-        }).$mount(el);
+        const View = Vue.extend(ProjectsWidget);
+        const vm = new View({ propsData: {} }).$mount(el);
     });
 });

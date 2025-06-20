@@ -12,57 +12,53 @@
 					{{ statusMessage }}
 				</NcNoteCard>
 
-				<form @submit.prevent="createProject">
+				<form>
 					<!-- Project Name -->
 					<div class="form-row">
-						<NcTextField v-model="projectName"
+						<NcTextField v-model="project.name"
 							label="Project Name*"
 							class="form-row-item"
 							placeholder="e.g., Q4 Marketing Campaign"
 							:show-label="true"
-							input-label="Project Name"
-							/>
+							input-label="Project Name"/>
 
-						<NcTextField v-model="projectNumber"
+						<NcTextField v-model="project.number"
 							label="Project Number*"
 							placeholder="e.g., P-2025-001"
 							:show-label="true"
 							input-label="Project Number"
-							class="form-row-item"
-							/>
+							class="form-row-item"/>
 					</div>
 
 					<!-- Project description -->
 					<div class="form-row">
 						<NcTextArea
-							v-model="projectDescription"
+							v-model="project.description"
 							class="form-row-item"
 							label="Project description"
 							placeholder="Provide some details"
 							:show-label="true"
 							input-label="Project Description"
-							rows="4"
-						/>
+							rows="4"/>
 					</div>
 
 					<!-- Project Address -->
 					<div class="form-row">
-						<NcTextField v-model="projectAddress"
+						<NcTextField v-model="project.address"
 							class="form-row-item"
 							label="Client Address or Location"
 							placeholder="e.g., 123 Innovation Drive, Tech City"
 							:show-label="true"
-							input-label="Client Address or Location"
-							/>
+							input-label="Client Address or Location"/>
 					</div>
-					
+
 					<!-- Project Number & Type (in a row) -->
 					<div class="form-row">
-						<NcSelect v-model="projectType"
+						<NcSelect v-model="selectedProjectType"
 							class="form-row-item"
 							placeholder="Select project type"
 							input-label="Project Type*"
-							:options="types"
+							:options="PROJECT_TYPES"
 							:show-label="true"
 							:multiple="false"
 							/>
@@ -70,23 +66,17 @@
 
 					<!-- Project Members -->
 					<div class="form-row">
-						<NcSelectUsers :options="users"
+						<UsersFetcher 
 							class="form-row-item"
-							:model-value="projectMembers"
-							:multiple="true"
-							:keep-open="true"
-							:show-label="true"
-							:no-wrap="true"
 							input-label="Project Team Members*"
 							placeholder="Select team members"
-							@search="fetchUsers"
-							@update:modelValue="projectMembers = $event" 
-						/>
+							:model-value="project.members"
+							@update:modelValue="project.members = $event">
+						</UsersFetcher>
 					</div>
-
 					<!-- Action Button -->
 					<NcButton 
-							:disabled="isCreatingProject || !projectName || !projectNumber || !projectType || projectMembers.length === 0"
+							:disabled="isCreatingProject || !project.name || !project.number || isNaN(project.type) || project.members.length === 0"
 							type="primary"
 							:wide="true"
 							@click="createProject"
@@ -103,35 +93,22 @@
 </template>
 
 <script>
-
 import {
 	NcAppContent,
 	NcButton,
 	NcTextField,
 	NcSelect,
 	NcNoteCard
-} from '@nextcloud/vue'
-import NcSelectUsers from '@nextcloud/vue/components/NcSelectUsers'
-import NcTextArea from '@nextcloud/vue/components/NcTextArea'
-import Plus from 'vue-material-design-icons/Plus.vue'
-import svgAccountGroup from '@mdi/svg/svg/account-group.svg?raw'
-import svgEmail from '@mdi/svg/svg/email.svg?raw'
-import { generateUrl } from '@nextcloud/router'
-import axios from 'axios'
+} from '@nextcloud/vue';
+import { PROJECT_TYPES } from './macros/project-types';
+import { ProjectsService } from './Services/projects';
+import { Project } from './Models/project';
 
-let searchTimeout = null;
-const types = [
-	{ id: 0, label: 'Marketing Campaign' },
-	{ id: 1, label: 'Product Development' },
-	{ id: 2, label: 'Research Project' },
-	{ id: 3, label: 'Event Planning' },
-	{ id: 4, label: 'Consulting Engagement' },
-	{ id: 5, label: 'Training Program' },
-	{ id: 6, label: 'Software Development' },
-	{ id: 7, label: 'Infrastructure Upgrade' },
-	{ id: 8, label: 'Community Outreach' },
-	{ id: 9, label: 'Other' }
-];
+import UsersFetcher from './components/UsersFetcher.vue';
+import NcTextArea from '@nextcloud/vue/components/NcTextArea';
+import Plus from 'vue-material-design-icons/Plus.vue';
+
+const projectsService = ProjectsService.getInstance();
 
 export default {
 	name: 'App',
@@ -141,150 +118,68 @@ export default {
 		NcTextField,
 		NcSelect,
 		NcNoteCard,
+		UsersFetcher,
+		NcTextArea,
 		Plus,
-		NcSelectUsers,
-		svgAccountGroup,
-		svgEmail,
-		NcTextArea
 	},
 	data() {
 		return {
-			projectName: '',
-			projectNumber: '',
-			projectAddress: '',
-			projectType: '',
-			projectMembers: [],
-			projectDescription: '',
-
-			isFetchingUsers: false,
+			project: new Project(),
 			isCreatingProject: false,
 			submissionStatus: '',
 			statusMessage: '',
-
-			users: [],
-			types
+			PROJECT_TYPES
 		};
 	},
+	computed: {
+		selectedProjectType: {
+			get() {
+				return this.PROJECT_TYPES.find((type) => type.id === this.project.type) || null;
+			},
+			set(option) {
+				this.project.type = option ? option.id : null;
+			}
+		}
+	},
 	methods: {
-		async fetchUsers(query) {
-			if (searchTimeout) {
-				clearTimeout(searchTimeout);
-			}
-
-			this.users = [];
-			
-			if (!query.trim()) {
-				return;
-			}
-
-			this.isFetchingUsers = true;
-			searchTimeout = setTimeout(async () => {
-				try {
-					const response = await axios.get('/ocs/v1.php/cloud/users', {
-						params: {
-							search: query,
-							limit: 20
-						},
-						headers: { 
-							'OCS-APIRequest': 'true',
-							'Content-Type': 'application/x-www-form-urlencoded'
-						}
-					});
-
-					const userIds = response.data.ocs.data.users;
-					const fullUsers = [];
-					for( let i = 0; i < userIds.length; i++) {
-						const userId = userIds[i];
-						const userDetails = await this.getUserDetails(userId);
-						if(!userDetails) continue;
-						
-						fullUsers.push({
-							id: userDetails.id,
-							user: userDetails.id,
-							displayName: userDetails.displayName,
-							subname: userDetails.email
-						});
-					}
-
-					this.users = fullUsers;
-
-				} catch (error) {
-					console.error('Error fetching users:', error);
-				} finally {
-					this.isFetchingUsers = false;
-				}
-				
-			}, 300);
-		},
-		async getUserDetails(userId) {
-            try {
-                const response = await axios.get(`/ocs/v1.php/cloud/users/${userId}`, {
-					headers: {
-						'OCS-APIRequest': 'true',
-						'Content-Type': 'application/x-www-form-urlencoded'
-					}
-				});
-
-				const details = response.data.ocs.data;
-				return {
-					id: details.id,
-					displayName: details.displayname,
-					email: details.email ?? details.phone,
-					status: details.status
-				};
-            } catch (error) {
-                console.error(`Error getting details for user ${userId}:`, error);
-            }
-        },
 		async createProject() {
 			this.isCreatingProject = true;
-			this.isMessageVisible = false;
 			this.submissionStatus = '';
 			this.statusMessage = '';
 
-			const projectData = {
-				name: this.projectName.trim(),
-				number: this.projectNumber.trim(),
-				description: this.projectDescription.trim(),
-				type: this.projectType.id,
-				address: this.projectAddress.trim(),
-				members: this.projectMembers.map(m => m.id)
-			};
-
 			try {
-				const url = generateUrl('/apps/projectcreatoraio/api/v1/projects');
-				const response = await axios.post(url, projectData, {
-					headers: {
-						'OCS-APIRequest': 'true',
-						'Content-Type': 'application/json'
-					}
-				});
-
-				this.submissionStatus = 'success';
-				this.statusMessage = response.data.message || 'Project created successfully!';
-				this.resetForm();
+				await projectsService.create(this.project);
+				this.showProjectCreationSuccessMessage();
+				this.resetProjectForm();
 				
 				setTimeout(() => {
-					this.submissionStatus = '';
+					this.resetProjectCreationMessage();
 				}, 4000);
 
 			} catch (error) {
-				this.submissionStatus = 'error';
-				this.statusMessage = error.message || 'An unknown error occurred.';
+				this.showProjectCreationErrorMessage(error);
 				console.error('Error creating project:', error);
-
 			} finally {
 				this.isCreatingProject = false;
 			}
 		},
-		resetForm() {
-			this.projectName = '';
-			this.projectNumber = '';
-			this.projectAddress = '';
-			this.projectType = '';
-			this.projectMembers = [];
-			this.projectDescription = '';
-			this.users = [];
+		resetProjectForm() {
+			this.project = new Project();
+		},
+		showProjectCreationSuccessMessage() {
+			this.submissionStatus = 'success';
+			this.statusMessage = 'Project has been created successfully';
+		},
+		/**
+		 * @param error {Error}
+		 */
+		showProjectCreationErrorMessage(error) {
+			this.submissionStatus = 'error';
+			this.statusMessage = error.message || 'An unknown error occurred.';
+		},
+		resetProjectCreationMessage() {
+			this.submissionStatus = '';
+			this.statusMessage = '';
 		}
 	}
 }

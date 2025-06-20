@@ -58,6 +58,7 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
             $table->addOption('mysql_engine', 'InnoDB');
             $table->addIndex(['name'],'projectNameIndex', ['fulltext']);
             $table->addIndex(['owner_id'],'projectOwnerIdIndex', []);
+            $table->addUniqueIndex(['circle_id'], 'projectCircleIdUnique');
         }
         
         return $schema;
