@@ -75,7 +75,7 @@ export class ProjectsService {
             });
             return response.data ?? [];
         } catch(e) {
-            console.log('Failed to fetch user projects', e);
+            console.error('Failed to fetch user projects', e);
             return [];
         }
     }

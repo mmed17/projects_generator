@@ -2,7 +2,8 @@
 
 namespace OCA\ProjectCreatorAIO\AppInfo;
 
-use OCA\ProjectCreatorAIO\Dashboard\ProjectWidget;
+use OCA\ProjectCreatorAIO\Dashboard\ProjectsWidget;
+use OCA\ProjectCreatorAIO\Dashboard\TasksWidget;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -16,7 +17,8 @@ class Application extends App implements IBootstrap {
     }
 	
 	public function register(IRegistrationContext $context): void {
-		$context->registerDashboardWidget(ProjectWidget::class);
+		$context->registerDashboardWidget(ProjectsWidget::class);
+		$context->registerDashboardWidget(TasksWidget::class);
 	}
 
 	public function boot(IBootContext $context): void {}

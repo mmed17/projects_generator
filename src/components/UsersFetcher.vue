@@ -1,7 +1,7 @@
 <template>
     <NcSelectUsers :options="users"
         :model-value="modelValue"
-        :multiple="true"
+        :multiple="multiple"
         :keep-open="true"
         :show-label="true"
         :no-wrap="true"
@@ -36,6 +36,10 @@ export default {
             type: Array,
             default: () => [],
         },
+		multiple: {
+			type: Boolean,
+			default: () => true,
+		}
     },
     data() {
         return {
@@ -75,7 +79,7 @@ export default {
 
 				return acc;
 			}, []);
-			
+
 			this.$emit('update:modelValue', usersId);
 		}
     }

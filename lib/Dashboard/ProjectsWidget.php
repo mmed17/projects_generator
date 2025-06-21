@@ -6,18 +6,21 @@ use OCP\Dashboard\IWidget;
 use OCP\IInitialStateService;
 use OCP\IL10N;
 use OCP\IURLGenerator;
+use OCP\IUserSession;
 
-class ProjectWidget implements IWidget {
+class ProjectsWidget implements IWidget {
     public const APP_ID = 'projectcreatoraio';
 
     public function __construct(
         IInitialStateService $initialStateService,
         IL10N $l10n,
-        IURLGenerator $urlGenerator
+        IURLGenerator $urlGenerator,
+        IUserSession $userSession
     ) {
         $this->initialStateService = $initialStateService;
         $this->l10n = $l10n;
         $this->urlGenerator = $urlGenerator;
+        $this->userSession = $userSession;
     }
 
     /**
@@ -25,7 +28,7 @@ class ProjectWidget implements IWidget {
      * @since 20.0.0
      */
     public function getId(): string {
-        return self::APP_ID;
+        return self::APP_ID . 'projects';
     }
 
     /**
@@ -65,7 +68,13 @@ class ProjectWidget implements IWidget {
      * Execute widget bootstrap code like loading scripts and providing initial state
      */
     public function load(): void {
-        $this->initialStateService->provideInitialState(self::APP_ID, 'data', []);
+        $user = $this->userSession->getUser();
+
+        $this->initialStateService->provideInitialState(self::APP_ID, 'currentUser', [
+            'id' => $user->getUID(),
+            'displayName' => $user->getDisplayName()
+        ]);
+
         \OCP\Util::addScript(self::APP_ID, self::APP_ID . '-dashboard');
     }
 }

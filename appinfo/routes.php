@@ -23,6 +23,21 @@ return [
             "verb" => "GET",
         ],
         [
+            'name' => 'project_api#getOpenTasks',
+            'url' => '/api/v1/tasks/open',
+            'verb' => 'GET'
+        ],
+        [
+            'name' => 'project_api#getOverdueTasks',
+            'url' => '/api/v1/tasks/overdue',
+            'verb' => 'GET'
+        ],
+        [
+            'name' => 'project_api#getUpcomingTasks',
+            'url' => '/api/v1/tasks/upcoming',
+            'verb' => 'GET'
+        ],
+        [
             "name" => "page#index",
             "url" => "/",
             "verb" => "GET",

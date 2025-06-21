@@ -114,9 +114,10 @@ import { PROJECT_TYPES } from '../macros/project-types';
 import { UsersSerice } from '../Services/users'
 import { ProjectsService } from '../Services/projects'
 import { generateUrl } from '@nextcloud/router'
-import { getCurrentUser } from '@nextcloud/auth'
+import { loadState } from '@nextcloud/initial-state'
+import { APP_ID } from '../macros/app-id'
 
-
+const currentUser = loadState(APP_ID, 'currentUser');
 const usersService = UsersSerice.getInstance();
 const projectsService = ProjectsService.getInstance();
 
@@ -201,7 +202,7 @@ export default {
 	methods: {
         async fetchProjectsByUser(user) {
             this.loading = true;
-            this.projects = await projectsService.fetchProjectsByUser(user ? user.id : getCurrentUser().uid);
+            this.projects = await projectsService.fetchProjectsByUser(user ? user.id:currentUser.id);
             this.loading = false;
         },
         async fetchUsers(query) {
