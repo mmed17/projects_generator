@@ -5,8 +5,7 @@
                 <NcTextField :style="styles.noMargin" v-model="searchQuery"
                     :label="t('projectcreatoraio', 'Search Projects')"
                     :placeholder="t('projectcreatoraio', 'e.g: Project Alpha...')"
-                    trailing-button-icon="close"
-                    @input="searchProjects">
+                    trailing-button-icon="close">
                     <template #icon>
                         <Magnify :size="20" />
                     </template>

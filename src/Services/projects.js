@@ -79,4 +79,30 @@ export class ProjectsService {
             return [];
         }
     }
+
+    /**
+     * get projects by name
+     * @param {string} query
+     */
+    async search(query) {
+        try {
+            const url = generateUrl(`/apps/projectcreatoraio/api/v1/projects/search`);
+            
+            const params = new URLSearchParams();
+            params.append('search', query);
+    
+            const response = await axios.get(`${url}?${params.toString()}`, {
+                headers: {
+                    'OCS-APIRequest': 'true',
+                    'Content-Type': 'application/json'
+                }
+            });
+    
+            return response.data ?? [];
+
+        } catch(e) {
+            console.error("Failed to search projects", e);
+            return [];
+        }
+    }
 }

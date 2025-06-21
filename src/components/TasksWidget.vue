@@ -5,8 +5,7 @@
                 <NcTextField :style="styles.noMargin" v-model="searchQuery"
                     :label="t('projectcreatoraio', 'Search Tasks')"
                     :placeholder="t('projectcreatoraio', 'e.g: Buy a new ...')"
-                    trailing-button-icon="close"
-                    @input="searchTasks">
+                    trailing-button-icon="close">
                     <template #icon>
                         <Magnify :size="20" />
                     </template>
@@ -41,6 +40,7 @@
                         :options="allProjects"
                         :loading="isFetchingProjects"
                         :append-to-body="true"
+                        @search="fetchProjects"
                         @update:modelValue="handleProjectSelection">
                         <template #icon>
                             <Folder :size="20" />
@@ -81,8 +81,6 @@
                     <template #icon>
                         <CalendarClockOutline :size="25" />
                     </template>
-                    
-                    <template #subname></template>
 
                     <template #actions>
                         <NcActionButton
@@ -138,6 +136,7 @@ import { ProjectsService } from '../Services/projects';
 import { loadState } from '@nextcloud/initial-state';
 import { APP_ID } from '../macros/app-id';
 import { generateUrl } from '@nextcloud/router'
+import axios from 'axios'
 
 const currentUser = loadState(APP_ID, 'currentUser');
 const usersService = UsersSerice.getInstance();
@@ -217,12 +216,12 @@ export default {
                 { id: 1, label: 'Upcoming Tasks', endpoint: 'upcoming' },
                 { id: 2, label: 'Overdue Tasks', endpoint: 'overdue' }
             ],
-            searchTimeout: undefined,
+            projectSearchTimeout: undefined,
+            userSearchTimeout: undefined,
 		}
 	},
 	computed: {
 		filteredTasks() {
-            console.log(this.searchQuery, this.tasks);
 			if (!this.searchQuery) {
 				return this.tasks;
 			}
@@ -256,15 +255,15 @@ export default {
             this.loading = false;
         },
         async fetchUsers(query) {
-			if (this.searchTimeout) {
-				clearTimeout(this.searchTimeout);
+			if (this.userSearchTimeout) {
+				clearTimeout(this.userSearchTimeout);
 			}
 
 			this.isFetchingUsers = true;
-			this.searchTimeout = setTimeout(async () => {
+			this.userSearchTimeout = setTimeout(async () => {
                 this.allUsers = await usersService.search(query);
                 this.isFetchingUsers = false;
-			}, 300);
+			}, 500);
 		},
         getTaskTypeLabel(id) {
             const type = this.allTaskTypes.find(t => t.id === id)
@@ -303,15 +302,14 @@ export default {
                 }
 
                 const url = generateUrl(`/apps/${APP_ID}/api/v1/tasks/${taskType.endpoint}`);
-                const response = await fetch(`${url}?${params.toString()}`);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                this.tasks = data;
-
+                const response = await axios.get(`${url}?${params.toString()}`, {
+                    headers: {
+                    'OCS-APIRequest': 'true',
+                    'Content-Type': 'application/json'
+                    }
+                });
+                this.tasks = response.data;
+                
             } catch (error) {
                 console.error('Failed to fetch tasks:', error);
                 this.tasks = [];
@@ -324,32 +322,39 @@ export default {
 
             if (!user) {
                 this.allProjects = [];
-                this.selectedProject = null; // Clear selected project
+                this.selectedProject = null;
                 return;
             }
 
             this.isFetchingProjects = true;
             this.allProjects = await projectsService.fetchProjectsByUser(user.id);
-            this.allProjects = this.allProjects.map((p) => {
-                p.label = p.name;
-                return p;
-            });
-            // if the previously selected project is not in the new list, clear it
-            if (this.selectedProject && !this.allProjects.some(p => p.id === this.selectedProject.id)) {
-                this.selectedProject = null;
-            }
+            this.selectedProject = null;
             this.isFetchingProjects = false;
         },
         handleProjectSelection(project) {
-            // v-model handles the update, the watch block will trigger the fetch
             this.selectedProject = project;
         },
         selectTask(task) {
             this.selectedTaskId = task.id;
             const url = generateUrl(`/apps/deck/board/${task.board_id}/card/${task.id}`);
             window.open(url, '_blank');
-            console.log(task);
         },
+        async fetchProjects(query) {
+            if(this.selectedUser) {
+                return;
+            }
+
+            this.isFetchingProjects = true;
+
+            if(this.projectSearchTimeout) {
+                clearTimeout(this.projectSearchTimeout);
+            }
+
+            this.projectSearchTimeout = setTimeout(async () => {
+                this.allProjects = await projectsService.search(query);
+                this.isFetchingProjects = false;
+            }, 500);
+        }
 	},
 }
 </script>

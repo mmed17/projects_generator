@@ -10,6 +10,7 @@ class Project extends Entity implements \JsonSerializable {
 
     // make each column property nullable with a default
     protected ?string $name        = null;
+    protected ?string $label       = null;
     protected ?string $number      = null;
     protected ?int    $type        = null;
     protected ?string $address     = null;
@@ -23,6 +24,7 @@ class Project extends Entity implements \JsonSerializable {
 
     public function __construct() {
         $this->addType('name',        Types::STRING);
+        $this->addType('label',       Types::STRING);
         $this->addType('number',      Types::STRING);
         $this->addType('type',        Types::INTEGER);
         $this->addType('address',     Types::STRING);
@@ -40,6 +42,7 @@ class Project extends Entity implements \JsonSerializable {
         return [
             'id'          => $this->id,
             'name'        => $this->name,
+            'label'       => $this->name,
             'number'      => $this->number,
             'type'        => $this->type,
             'address'     => $this->address,

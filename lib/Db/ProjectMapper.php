@@ -46,11 +46,10 @@ class ProjectMapper extends QBMapper {
     public function search(string $name, int $limit, int $offset) {
         $qb = $this->db->getQueryBuilder();
 
+        $searchTerm = strtolower($name);
         $qb->select('*')
-           ->from(self::TABLE_NAME)
-           ->where($qb->expr()->like('name', $qb->createNamedParameter('%' . $name . '%')))
-           ->setMaxResults($limit)
-           ->setFirstResult($offset);
+            ->from(self::TABLE_NAME)
+            ->where('LOWER(name) LIKE ' . $qb->createNamedParameter('%' . $searchTerm . '%'));
         
         return $this->findEntities($qb);
     }
