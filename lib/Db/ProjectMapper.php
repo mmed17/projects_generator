@@ -91,7 +91,7 @@ class ProjectMapper extends QBMapper {
     public function findUndoneTasksByUser(string $userId): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('cards.*')
+        $qb->select('cards.*', 'stacks.board_id')
             ->from('deck_cards', 'cards')
             ->innerJoin(
                 'cards',
@@ -99,6 +99,7 @@ class ProjectMapper extends QBMapper {
                 'assignments',
                 $qb->expr()->eq('cards.id', 'assignments.card_id')
             )
+            ->innerJoin('cards', 'deck_stacks', 'stacks', $qb->expr()->eq('cards.stack_id', 'stacks.id'))
             ->where(
                 $qb->expr()->eq('assignments.participant', $qb->createNamedParameter($userId))
             )
@@ -118,7 +119,7 @@ class ProjectMapper extends QBMapper {
     public function findUndoneTasksByProject(int $projectId): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('assignments.participant', 'cards.*')
+        $qb->select('assignments.participant', 'cards.*', 'projects.board_id')
             ->from(self::TABLE_NAME, 'projects')
             ->innerJoin(
                 'projects',
@@ -158,7 +159,7 @@ class ProjectMapper extends QBMapper {
     public function findUndoneTasksByUserInProject(int $projectId, string $userId): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('cards.*')
+        $qb->select('cards.*', 'projects.board_id')
             ->from(self::TABLE_NAME, 'projects')
             ->innerJoin(
                 'projects',
@@ -200,7 +201,7 @@ class ProjectMapper extends QBMapper {
     public function findOverdueTasksByUser(string $userId): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('cards.*')
+        $qb->select('cards.*', 'stacks.board_id')
             ->from('deck_cards', 'cards')
             ->innerJoin(
                 'cards',
@@ -208,6 +209,7 @@ class ProjectMapper extends QBMapper {
                 'assignments',
                 $qb->expr()->eq('cards.id', 'assignments.card_id')
             )
+            ->innerJoin('cards', 'deck_stacks', 'stacks', $qb->expr()->eq('cards.stack_id', 'stacks.id'))
             ->where(
                 $qb->expr()->eq('assignments.participant', $qb->createNamedParameter($userId))
             )
@@ -228,7 +230,7 @@ class ProjectMapper extends QBMapper {
     public function findOverdueTasksByProject(int $projectId): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('assignments.participant', 'cards.*')
+        $qb->select('assignments.participant', 'cards.*', 'projects.board_id')
             ->from(self::TABLE_NAME, 'projects')
             ->innerJoin(
                 'projects',
@@ -269,7 +271,7 @@ class ProjectMapper extends QBMapper {
     public function findOverdueTasksByUserInProject(int $projectId, string $userId): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('cards.*')
+        $qb->select('cards.*', 'projects.board_id')
             ->from(self::TABLE_NAME, 'projects')
             ->innerJoin(
                 'projects',
@@ -312,7 +314,7 @@ class ProjectMapper extends QBMapper {
     public function findUpcomingTasksByUser(string $userId): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('cards.*')
+        $qb->select('cards.*', 'stacks.board_id')
             ->from('deck_cards', 'cards')
             ->innerJoin(
                 'cards',
@@ -320,6 +322,7 @@ class ProjectMapper extends QBMapper {
                 'assignments',
                 $qb->expr()->eq('cards.id', 'assignments.card_id')
             )
+            ->innerJoin('cards', 'deck_stacks', 'stacks', $qb->expr()->eq('cards.stack_id', 'stacks.id'))
             ->where(
                 $qb->expr()->eq('assignments.participant', $qb->createNamedParameter($userId))
             )
@@ -340,7 +343,7 @@ class ProjectMapper extends QBMapper {
     public function findUpcomingTasksByProject(int $projectId): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('assignments.participant', 'cards.*')
+        $qb->select('assignments.participant', 'cards.*', 'projects.board_id')
             ->from(self::TABLE_NAME, 'projects')
             ->innerJoin(
                 'projects',
@@ -381,7 +384,7 @@ class ProjectMapper extends QBMapper {
     public function findUpcomingTasksByUserInProject(int $projectId, string $userId): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('cards.*')
+        $qb->select('cards.*', 'projects.board_id')
             ->from(self::TABLE_NAME, 'projects')
             ->innerJoin(
                 'projects',

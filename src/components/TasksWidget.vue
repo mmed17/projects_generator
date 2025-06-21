@@ -12,82 +12,51 @@
                     </template>
                 </NcTextField>
                 
-                <!-- <NcActions :persistent="true">
+                <NcActions :persistent="true">
                     <template #icon>
                         <FilterCog :size="20" />
                     </template>
-                    <NcSelect
+
+                    <NcActionInput
                         v-model="selectedUser"
                         type="multiselect"
                         track-by="label"
-                        :append-to-body="true"
                         :multiple="false"
                         :options="allUsers"
                         :loading="isFetchingUsers"
+                        :append-to-body="true"
                         @search="fetchUsers"
                         @update:modelValue="handleUserSelection">
                         <template #icon>
                             <Account :size="20" />
                         </template>
                         Select a user
-                    </NcSelect>
+                    </NcActionInput>
 
-                    <NcSelect
+                    <NcActionInput
                         v-model="selectedProject"
                         type="multiselect"
                         track-by="label"
-                        :append-to-body="true"
                         :multiple="false"
                         :options="allProjects"
                         :loading="isFetchingProjects"
+                        :append-to-body="true"
                         @update:modelValue="handleProjectSelection">
                         <template #icon>
                             <Folder :size="20" />
                         </template>
                         Select a project
-                    </NcSelect>
+                    </NcActionInput>
 
-                    <NcActionCheckbox
+                    <NcActionRadio
                         v-for="type in allTaskTypes"
                         :key="type.id"
-                        :model-value="selectedTaskTypes.includes(type.id)"
-                        @change="toggleTaskType(type.id)">
+                        v-model="selectedTaskType"
+                        :value="type.id"
+                        name="task-type-selection">
                         {{ type.label }}
-                    </NcActionCheckbox>
-                </NcActions> -->
-                <NcPopover 
-                    popup-role="dialog" 
-                    :shown="true" 
-                    @update:shown="handleFilterPopover">
-                    <template #trigger>
-                        <NcButton>I am the trigger</NcButton>
-                    </template>
-                    <template #default>
-                        <form tabindex="0" role="dialog" aria-labelledby="popover-example-dialog-header-1" @submit.prevent>
-                            <h2 id="popover-example-dialog-header-1">this is some content</h2>
-                            <p>
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. <br/>
-                                Vestibulum eget placerat velit.
-                            </p>
-                            <label>
-                                Label element
-                                <input type="text" placeholder="input element"/>
-                            </label>
-                        </form>
-                    </template>
-                </NcPopover>
-            </div>
-
-            <div style="display: flex; justify-content: start; align-items: center; gap: 10px; margin-top: 5px">
-                <NcChip v-if="selectedUser" no-close>
-                    <template #icon>
-                        <NcAvatar 
-                            :size="24" 
-                            :user="selectedUser.id" 
-                            :display-name="selectedUser.displayName"/>
-                    </template>
-                    {{ selectedUser.displayName }}
-                </NcChip>
+                    </NcActionRadio>
+                </NcActions>
             </div>
         </div>
 
@@ -110,7 +79,7 @@
                     :force-display-actions="true"
                     @click="selectTask(task)">
                     <template #icon>
-                        <CalendarClockOutline :size="30" />
+                        <CalendarClockOutline :size="25" />
                     </template>
                     
                     <template #subname></template>
@@ -144,6 +113,7 @@ import NcButton from '@nextcloud/vue/components/NcButton'
 import NcActionInput from '@nextcloud/vue/components/NcActionInput'
 import NcActionCheckbox from '@nextcloud/vue/components/NcActionCheckbox'
 import NcPopover from '@nextcloud/vue/components/NcPopover'
+import NcActionRadio from '@nextcloud/vue/components/NcActionRadio'
 import { t } from '@nextcloud/l10n'
 
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
@@ -167,6 +137,7 @@ import { UsersSerice } from '../Services/users';
 import { ProjectsService } from '../Services/projects';
 import { loadState } from '@nextcloud/initial-state';
 import { APP_ID } from '../macros/app-id';
+import { generateUrl } from '@nextcloud/router'
 
 const currentUser = loadState(APP_ID, 'currentUser');
 const usersService = UsersSerice.getInstance();
@@ -220,22 +191,14 @@ export default {
         NcActionCheckbox,
         NcPopover,
         CalendarClockOutline,
-        NcSelect
+        NcSelect,
+        NcActionRadio
 	},
-    handleFilterPopover(event) {
-        console.log("handle popover", event);
-    },
 	data() {
 		return {
 			t,
-			tasks: [{  
-                "title": "Test card",
-                "description": "A card description",
-                "type": "plain",
-                "order": 999,
-                "duedate": "2019-12-24T19:29:30+00:00",
-            }],
-			loading: true,
+			tasks: [],
+			loading: false,
 			searchQuery: '',
             folderSvg: mdiFolder,
             clockSvg: mdiClock,
@@ -245,20 +208,21 @@ export default {
             isFetchingProjects: false,
             selectedUser: null,
             selectedProject: null,
-            selectedTaskTypes: [],
+            selectedTaskType: 0,
             styles,
             allUsers: [],
             allProjects: [],
             allTaskTypes: [
-                { id: 0, label: 'Open Tasks' },
-                { id: 1, label: 'Upcoming Tasks' },
-                { id: 2, label: 'Overdue Tasks' }
+                { id: 0, label: 'Open Tasks', endpoint: 'open' },
+                { id: 1, label: 'Upcoming Tasks', endpoint: 'upcoming' },
+                { id: 2, label: 'Overdue Tasks', endpoint: 'overdue' }
             ],
             searchTimeout: undefined,
 		}
 	},
 	computed: {
 		filteredTasks() {
+            console.log(this.searchQuery, this.tasks);
 			if (!this.searchQuery) {
 				return this.tasks;
 			}
@@ -268,6 +232,17 @@ export default {
 			});
 		},
 	},
+    watch: {
+        selectedUser() {
+            this.fetchTasks();
+        },
+        selectedProject() {
+            this.fetchTasks();
+        },
+        selectedTaskType() {
+            this.fetchTasks();
+        }
+    },
 	async mounted() {
         const panelContent = this.$el.closest('.panel--content');
         if (panelContent) {
@@ -291,18 +266,6 @@ export default {
                 this.isFetchingUsers = false;
 			}, 300);
 		},
-        async fetchTasks() {
-
-        },
-		async downloadFile(url) {},
-        toggleTaskType(typeId) {
-            const index = this.selectedTaskTypes.indexOf(typeId);
-            if (index > -1) {
-            this.selectedTaskTypes.splice(index, 1);
-            } else {
-            this.selectedTaskTypes.push(typeId);
-            }
-        },
         getTaskTypeLabel(id) {
             const type = this.allTaskTypes.find(t => t.id === id)
             return type ? type.label : 'Unknown'
@@ -315,31 +278,80 @@ export default {
                 default: return 'default'
             }
         },
-        async handleUserSelection(user) {
-            this.selectedUser = user;
-
-            if(!user) {
-                this.projects = [];
+        async fetchTasks() {
+            if (!this.selectedUser && !this.selectedProject) {
+                this.tasks = [];
                 return;
             }
 
-            this.allProjects = await projectsService.fetchProjectsByUser(user.id);
-            this.allProjects.map((p) => {
-                p.label = p.name;
-                if(this.selectedProject && p.id === this.selectedProject.id) {
-                    this.selectedProject = '';
+            this.loading = true;
+
+            try {
+                const taskType = this.allTaskTypes.find(t => t.id === this.selectedTaskType);
+                if (!taskType) {
+                    console.error('Invalid task type selected');
+                    this.tasks = [];
+                    return;
                 }
+
+                const params = new URLSearchParams();
+                if (this.selectedUser) {
+                    params.append('userId', this.selectedUser.id);
+                }
+                if (this.selectedProject) {
+                    params.append('projectId', this.selectedProject.id);
+                }
+
+                const url = generateUrl(`/apps/${APP_ID}/api/v1/tasks/${taskType.endpoint}`);
+                const response = await fetch(`${url}?${params.toString()}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                this.tasks = data;
+
+            } catch (error) {
+                console.error('Failed to fetch tasks:', error);
+                this.tasks = [];
+            } finally {
+                this.loading = false;
+            }
+        },
+        async handleUserSelection(user) {
+            this.selectedUser = user;
+
+            if (!user) {
+                this.allProjects = [];
+                this.selectedProject = null; // Clear selected project
+                return;
+            }
+
+            this.isFetchingProjects = true;
+            this.allProjects = await projectsService.fetchProjectsByUser(user.id);
+            this.allProjects = this.allProjects.map((p) => {
+                p.label = p.name;
+                return p;
             });
+            // if the previously selected project is not in the new list, clear it
+            if (this.selectedProject && !this.allProjects.some(p => p.id === this.selectedProject.id)) {
+                this.selectedProject = null;
+            }
+            this.isFetchingProjects = false;
         },
-        async handleProjectSelection() {
-
+        handleProjectSelection(project) {
+            // v-model handles the update, the watch block will trigger the fetch
+            this.selectedProject = project;
         },
-        selectTask() {
-
-        }
+        selectTask(task) {
+            this.selectedTaskId = task.id;
+            const url = generateUrl(`/apps/deck/board/${task.board_id}/card/${task.id}`);
+            window.open(url, '_blank');
+            console.log(task);
+        },
 	},
 }
 </script>
 
-<style lang="css" scoped>
-</style>
+<style lang="css" scoped></style>
