@@ -319,8 +319,6 @@ export default {
             this.selectedUser = user;
 
             if (!user) {
-                this.allProjects = [];
-                this.selectedProject = null;
                 return;
             }
 
