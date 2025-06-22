@@ -326,7 +326,11 @@ export default {
 
             this.isFetchingProjects = true;
             this.allProjects = await projectsService.fetchProjectsByUser(user.id);
-            this.selectedProject = null;
+            
+            if(this.allProjects.find(p => p.id === this.selectedProject) < 0) {
+                this.selectedProject = null;
+            }
+
             this.isFetchingProjects = false;
         },
         handleProjectSelection(project) {
