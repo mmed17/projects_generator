@@ -122,7 +122,7 @@ const projectsService = ProjectsService.getInstance();
 
 const styles = {
     filterContainer: {
-        'margin': '10px 0px' 
+        'margin': '10px 5px' 
     },
     filter: {
         'display': 'flex',

@@ -14,4 +14,4 @@ document.addEventListener('DOMContentLoaded', () => {
         const View = Vue.extend(TasksWidget);
         const vm = new View({ propsData: {} }).$mount(el);
     });
-}); 
+});

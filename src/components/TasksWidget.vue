@@ -15,6 +15,15 @@
                     <template #icon>
                         <FilterCog :size="20" />
                     </template>
+                    
+                    <NcActionRadio
+                        v-for="type in allTaskTypes"
+                        v-model="selectedTaskType"
+                        name="task-type-selection"
+                        :key="type.id"
+                        :value="type.id">
+                        {{ type.label }}
+                    </NcActionRadio>
 
                     <NcActionInput
                         v-model="selectedUser"
@@ -23,7 +32,6 @@
                         :multiple="false"
                         :options="allUsers"
                         :loading="isFetchingUsers"
-                        :append-to-body="true"
                         @search="fetchUsers"
                         @update:modelValue="handleUserSelection">
                         <template #icon>
@@ -39,7 +47,6 @@
                         :multiple="false"
                         :options="allProjects"
                         :loading="isFetchingProjects"
-                        :append-to-body="true"
                         @search="fetchProjects"
                         @update:modelValue="handleProjectSelection">
                         <template #icon>
@@ -47,15 +54,6 @@
                         </template>
                         Select a project
                     </NcActionInput>
-
-                    <NcActionRadio
-                        v-for="type in allTaskTypes"
-                        :key="type.id"
-                        v-model="selectedTaskType"
-                        :value="type.id"
-                        name="task-type-selection">
-                        {{ type.label }}
-                    </NcActionRadio>
                 </NcActions>
             </div>
         </div>
@@ -144,7 +142,7 @@ const projectsService = ProjectsService.getInstance();
 
 const styles = {
     filterContainer: {
-        'margin': '10px 0px' 
+        'margin': '10px 5px' 
     },
     filter: {
         'display': 'flex',

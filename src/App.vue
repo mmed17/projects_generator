@@ -1,112 +1,18 @@
-<template>
-	<NcAppContent>
-		<div id="projectcreatoraio" class="project-creator-container">
-			<div class="project-creator-form">
-				<h1 class="project-creator-title">Create a New Project</h1>
-				<p class="project-creator-subtitle">
-					Fill out the details below to set up your new project environment.
-				</p>
-
-				<!-- Submission Status Message -->
-				<NcNoteCard v-if="submissionStatus" :type="submissionStatus">
-					{{ statusMessage }}
-				</NcNoteCard>
-
-				<form>
-					<!-- Project Name -->
-					<div class="form-row">
-						<NcTextField v-model="project.name"
-							label="Project Name*"
-							class="form-row-item"
-							placeholder="e.g., Q4 Marketing Campaign"
-							:show-label="true"
-							input-label="Project Name"/>
-
-						<NcTextField v-model="project.number"
-							label="Project Number*"
-							placeholder="e.g., P-2025-001"
-							:show-label="true"
-							input-label="Project Number"
-							class="form-row-item"/>
-					</div>
-
-					<!-- Project description -->
-					<div class="form-row">
-						<NcTextArea
-							v-model="project.description"
-							class="form-row-item"
-							label="Project description"
-							placeholder="Provide some details"
-							:show-label="true"
-							input-label="Project Description"
-							rows="4"/>
-					</div>
-
-					<!-- Project Address -->
-					<div class="form-row">
-						<NcTextField v-model="project.address"
-							class="form-row-item"
-							label="Client Address or Location"
-							placeholder="e.g., 123 Innovation Drive, Tech City"
-							:show-label="true"
-							input-label="Client Address or Location"/>
-					</div>
-
-					<!-- Project Number & Type (in a row) -->
-					<div class="form-row">
-						<NcSelect v-model="selectedProjectType"
-							class="form-row-item"
-							placeholder="Select project type"
-							input-label="Project Type*"
-							:options="PROJECT_TYPES"
-							:show-label="true"
-							:multiple="false"
-							/>
-					</div>
-
-					<!-- Project Members -->
-					<div class="form-row">
-						<UsersFetcher 
-							class="form-row-item"
-							input-label="Project Team Members*"
-							placeholder="Select team members"
-							:model-value="project.members"
-							@update:modelValue="project.members = $event">
-						</UsersFetcher>
-					</div>
-					<!-- Action Button -->
-					<NcButton 
-							:disabled="isCreatingProject || !project.name || !project.number || isNaN(project.type) || project.members.length === 0"
-							type="primary"
-							:wide="true"
-							@click="createProject"
-							class="submit-button">
-						<template #icon>
-							<Plus :size="20" />
-						</template>
-						{{ isCreatingProject ? 'Creating Project...' : 'Create Project' }}
-					</NcButton>
-				</form>
-			</div>
-		</div>
-	</NcAppContent>
-</template>
-
 <script>
-import {
-	NcAppContent,
-	NcButton,
-	NcTextField,
-	NcSelect,
-	NcNoteCard
-} from '@nextcloud/vue';
+import NcAppContent from '@nextcloud/vue/components/NcAppContent';
+import NcTextField from '@nextcloud/vue/components/NcTextField';
+import NcNoteCard from '@nextcloud/vue/components/NcNoteCard';
+import NcTextArea from '@nextcloud/vue/components/NcTextArea';
+import NcButton from '@nextcloud/vue/components/NcButton';
+import NcSelect from '@nextcloud/vue/components/NcSelect';
+
+import Plus from 'vue-material-design-icons/Plus.vue';
+
 import { PROJECT_TYPES } from './macros/project-types';
 import { ProjectsService } from './Services/projects';
 import { Project } from './Models/project';
 
 import UsersFetcher from './components/UsersFetcher.vue';
-import NcTextArea from '@nextcloud/vue/components/NcTextArea';
-import Plus from 'vue-material-design-icons/Plus.vue';
 
 const projectsService = ProjectsService.getInstance();
 
@@ -184,6 +90,94 @@ export default {
 	}
 }
 </script>
+
+
+<template>
+	<NcAppContent>
+		<div id="projectcreatoraio" class="project-creator-container">
+			<div class="project-creator-form">
+				<h1 class="project-creator-title">Create a New Project</h1>
+				<p class="project-creator-subtitle">
+					Fill out the details below to set up your new project environment.
+				</p>
+
+				<NcNoteCard v-if="submissionStatus" :type="submissionStatus">
+					{{ statusMessage }}
+				</NcNoteCard>
+
+				<form>
+					<div class="form-row">
+						<NcTextField v-model="project.name"
+							label="Project Name*"
+							class="form-row-item"
+							placeholder="e.g., Q4 Marketing Campaign"
+							:show-label="true"
+							input-label="Project Name"/>
+
+						<NcTextField v-model="project.number"
+							label="Project Number*"
+							placeholder="e.g., P-2025-001"
+							:show-label="true"
+							input-label="Project Number"
+							class="form-row-item"/>
+					</div>
+
+					<div class="form-row">
+						<NcTextArea
+							v-model="project.description"
+							class="form-row-item"
+							label="Project description"
+							placeholder="Provide some details"
+							:show-label="true"
+							input-label="Project Description"
+							rows="4"/>
+					</div>
+
+					<div class="form-row">
+						<NcTextField v-model="project.address"
+							class="form-row-item"
+							label="Client Address or Location"
+							placeholder="e.g., 123 Innovation Drive, Tech City"
+							:show-label="true"
+							input-label="Client Address or Location"/>
+					</div>
+
+					<div class="form-row">
+						<NcSelect v-model="selectedProjectType"
+							class="form-row-item"
+							placeholder="Select project type"
+							input-label="Project Type*"
+							:options="PROJECT_TYPES"
+							:show-label="true"
+							:multiple="false"
+							/>
+					</div>
+
+					<div class="form-row">
+						<UsersFetcher 
+							class="form-row-item"
+							input-label="Project Team Members*"
+							placeholder="Select team members"
+							:model-value="project.members"
+							@update:modelValue="project.members = $event">
+						</UsersFetcher>
+					</div>
+					<NcButton 
+							:disabled="isCreatingProject || !project.name || !project.number || isNaN(project.type) || project.members.length === 0"
+							type="primary"
+							:wide="true"
+							@click="createProject"
+							class="submit-button">
+						<template #icon>
+							<Plus :size="20" />
+						</template>
+						{{ isCreatingProject ? 'Creating Project...' : 'Create Project' }}
+					</NcButton>
+				</form>
+			</div>
+		</div>
+	</NcAppContent>
+</template>
 
 <style scoped>
 .project-creator-container {
