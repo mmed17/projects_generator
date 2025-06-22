@@ -76,5 +76,6 @@ class ProjectsWidget implements IWidget {
         ]);
 
         \OCP\Util::addScript(self::APP_ID, self::APP_ID . '-dashboard');
+        \OCP\Util::addStyle(self::APP_ID, self::APP_ID . '-dashboard');
     }
 }

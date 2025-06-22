@@ -1,49 +1,48 @@
 <template>
-    <div id="projectcreatoraio" class="project-widget">
-        <div :style="styles.filterContainer">
-            <div :style="styles.filter">
-                <NcTextField :style="styles.noMargin" v-model="searchQuery"
-                    :label="t('projectcreatoraio', 'Search Projects')"
-                    :placeholder="t('projectcreatoraio', 'e.g: Project Alpha...')"
-                    trailing-button-icon="close">
-                    <template #icon>
-                        <Magnify :size="20" />
-                    </template>
-                </NcTextField>
-                
-                <NcActions>
-                    <template #icon>
-                        <NcAvatar 
-                            v-if="selectedUser" 
-                            :display-name="selectedUser.displayName" 
-                            :is-no-user="true" 
-                            size="32" />
-                        <AccountPlus v-else :size="20" />
-                    </template>
+    <div class="project-widget">
+        <div class="filter-container">
+            <NcTextField v-model="searchQuery"
+                :label="t('projectcreatoraio', 'Search Projects')"
+                :placeholder="t('projectcreatoraio', 'e.g: Project Alpha...')"
+                trailing-button-icon="close">
+                <template #icon>
+                    <Magnify :size="20" />
+                </template>
+            </NcTextField>
+            
+            <NcActions>
+                <template #icon>
+                    <NcAvatar 
+                        v-if="selectedUser" 
+                        :display-name="selectedUser.displayName" 
+                        :is-no-user="true" 
+                        size="32" />
+                    <AccountPlus v-else :size="20" />
+                </template>
 
-                    <NcActionInput
-                        v-model="selectedUser"
-                        ref="usersInputRef"
-                        type="multiselect"
-                        track-by="label"
-                        :append-to-body="true"
-                        :multiple="false"
-                        :options="allUsers"
-                        :loading="isFetchingUsers"
-                        @search="fetchUsers"
-                        @update:modelValue="fetchProjectsByUser">
-                        <template #icon>
-                            <Account :size="20" />
-                        </template>
-                        Please select a user
-                    </NcActionInput>
-                </NcActions>
-            </div>
+                <NcActionInput
+                    v-model="selectedUser"
+                    ref="usersInputRef"
+                    type="multiselect"
+                    track-by="label"
+                    :append-to-body="true"
+                    :multiple="false"
+                    :options="allUsers"
+                    :loading="isFetchingUsers"
+                    @search="fetchUsers"
+                    @update:modelValue="fetchProjectsByUser">
+                    <template #icon>
+                        <Account :size="20" />
+                    </template>
+                    Please select a user
+                </NcActionInput>
+            </NcActions>
         </div>
 
         <div v-if="loading" class="loading-placeholder">
             <NcLoadingIcon :size="44" />
         </div>
+
         <NcEmptyContent v-else-if="projects.length === 0"
             :name="t('projectcreatoraio', 'No projects found')">
             <template #icon>
@@ -120,21 +119,6 @@ const currentUser = loadState(APP_ID, 'currentUser');
 const usersService = UsersSerice.getInstance();
 const projectsService = ProjectsService.getInstance();
 
-const styles = {
-    filterContainer: {
-        'margin': '10px 5px' 
-    },
-    filter: {
-        'display': 'flex',
-        'align-items': 'center',
-        'justify-content': 'space-between',
-        'gap': '10px'
-    },
-    noMargin: {
-        'margin': '0px'
-    }
-};
-
 export default {
 	name: 'ProjectsWidget',
 	components: {
@@ -174,7 +158,6 @@ export default {
             isFetchingUsers: false,
             selectedUser: null,
             PROJECT_TYPES,
-            styles,
             allUsers: [],
             searchTimeout: undefined
 		}
@@ -217,8 +200,8 @@ export default {
 		},
         selectProject(project) {
             this.selectedProjectId = project.id;
-            const url = generateUrl(`/apps/contacts/circle/${project.circleId}`);
-            window.open(url, '_blank');
+            // const url = generateUrl(`/apps/contacts/circle/${project.circleId}`);
+            // window.open(url, '_blank');
         },
         closeFilterDialog() {
             setTimeout(() => {
@@ -231,7 +214,5 @@ export default {
 </script>
 
 <style lang="css" scoped>
-.project-widget-filter {
-  
-}
+@import '../styles/dashboard.css';
 </style>

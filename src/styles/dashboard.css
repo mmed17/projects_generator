@@ -1,0 +1,10 @@
+.filter-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 3px;
+}
+
+.filter-container .action-item {
+    margin-top: auto;
+}
