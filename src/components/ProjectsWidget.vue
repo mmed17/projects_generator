@@ -214,10 +214,7 @@ export default {
                 };
             }
 
-            const event = new CustomEvent('projectcreatoraio:project-selected', {
-                detail: eventPayload
-            });
-
+            const event = new CustomEvent('projectcreatoraio:project-selected', { detail: eventPayload });
             document.dispatchEvent(event);
         },
 	},
