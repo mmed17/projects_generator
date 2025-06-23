@@ -90,7 +90,7 @@ class ProjectApiController extends Controller {
                 fn($memberId) => $memberId!== $currentUser->getUID()
             );
 
-            $createdCircle = $this->circlesManager->createCircle("{$name} - Team", null, true, true);
+            $createdCircle = $this->circlesManager->createCircle("{$name} - Team", null, false, false);
             
             foreach ($circleMembersId as $memberId) {
                 $federatedUser = $this->federatedUserService->getLocalFederatedUser($memberId, true, true);
@@ -110,7 +110,9 @@ class ProjectApiController extends Controller {
                 $createdBoard->id,
                 Share::SHARE_TYPE_CIRCLE,
                 $createdCircle->getSingleId(),
-                false, false, false
+                false,
+                false,
+                false
             );
 
             // 5. Share folder with circle
@@ -187,88 +189,7 @@ class ProjectApiController extends Controller {
      * @return DataResponse
      */
     public function getUserProjects(string $userId): DataResponse {
-        $results = $this->projectMapper->getUserProjects($userId);
-        return new DataResponse($results);
-    }
-
-    /**
-     * @NoCSRFRequired
-     *
-     * Endpoint to get open (undone) tasks.
-     * Can be filtered by userId, projectId, or both.
-     *
-     * @param string|null $userId
-     * @param int|null $projectId
-     * @return DataResponse
-     */
-    public function getOpenTasks(string $userId = null, int $projectId = null): DataResponse {
-        if ($userId && $projectId) {
-            $results = $this->projectMapper->findUndoneTasksByUserInProject(
-                $projectId, 
-                $userId
-            );
-        } elseif ($userId) {
-            $results = $this->projectMapper->findUndoneTasksByUser($userId);
-        } elseif ($projectId) {
-            $results = $this->projectMapper->findUndoneTasksByProject($projectId);
-        } else {
-            return new DataResponse(
-                ['error' => 'A userId or projectId parameter is required.'], 
-                Http::STATUS_BAD_REQUEST
-            );
-        }
-        return new DataResponse($results);
-    }
-
-    /**
-     * @NoCSRFRequired
-     *
-     * Endpoint to get overdue tasks.
-     * Can be filtered by userId, projectId, or both.
-     *
-     * @param string|null $userId
-     * @param int|null $projectId
-     * @return DataResponse
-     */
-    public function getOverdueTasks(string $userId = null, int $projectId = null): DataResponse {
-        if ($userId && $projectId) {
-            $results = $this->projectMapper->findOverdueTasksByUserInProject($projectId, $userId);
-        } elseif ($userId) {
-            $results = $this->projectMapper->findOverdueTasksByUser($userId);
-        } elseif ($projectId) {
-            $results = $this->projectMapper->findOverdueTasksByProject($projectId);
-        } else {
-            return new DataResponse(
-                ['error' => 'A userId or projectId parameter is required.'],
-                Http::STATUS_BAD_REQUEST
-            );
-        }
-        return new DataResponse($results);
-    }
-
-    /**
-     * @NoCSRFRequired
-     *
-     * Endpoint to get upcoming tasks.
-     * Can be filtered by userId, projectId, or both.
-     *
-     * @param string|null $userId
-     * @param int|null $projectId
-     * @return DataResponse
-     */
-    public function getUpcomingTasks(string $userId = null, int $projectId = null): DataResponse {
-        if ($userId && $projectId) {
-            $results = $this->projectMapper->findUpcomingTasksByUserInProject($projectId, $userId);
-        } elseif ($userId) {
-            $results = $this->projectMapper->findUpcomingTasksByUser($userId);
-        } elseif ($projectId) {
-            $results = $this->projectMapper->findUpcomingTasksByProject($projectId);
-        } else {
-            return new DataResponse(
-                ['error' => 'A userId or projectId parameter is required.'], 
-                Http::STATUS_BAD_REQUEST
-            );
-        }
+        $results = $this->projectMapper->findByUserId($userId);
         return new DataResponse($results);
     }
 }
