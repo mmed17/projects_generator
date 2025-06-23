@@ -10,7 +10,7 @@
                 </template>
             </NcTextField>
             
-            <NcActions>
+            <NcActions v-if="isAdmin">
                 <template #icon>
                     <NcAvatar 
                         v-if="selectedUser" 
@@ -105,17 +105,14 @@ import AccountPlus from 'vue-material-design-icons/AccountPlus.vue';
 import Account from 'vue-material-design-icons/Account.vue';
 import AccountEdit from "vue-material-design-icons/AccountEdit.vue";
 import NcAvatar from '@nextcloud/vue/components/NcAvatar';
+import { getCurrentUser } from '@nextcloud/auth'
 
 import folderSvg from '@mdi/svg/svg/folder.svg?raw'
 import UsersFetcher from './UsersFetcher.vue'
 import { PROJECT_TYPES } from '../macros/project-types';
 import { UsersSerice } from '../Services/users'
 import { ProjectsService } from '../Services/projects'
-import { generateUrl } from '@nextcloud/router'
-import { loadState } from '@nextcloud/initial-state'
-import { APP_ID } from '../macros/app-id'
 
-const currentUser = loadState(APP_ID, 'currentUser');
 const usersService = UsersSerice.getInstance();
 const projectsService = ProjectsService.getInstance();
 
@@ -163,6 +160,9 @@ export default {
 		}
 	},
 	computed: {
+        isAdmin() {
+            return !!getCurrentUser()?.isAdmin;
+        },
 		filteredProjects() {
 			if (!this.searchQuery) {
 				return this.projects;
@@ -179,12 +179,12 @@ export default {
             panelContent.style.overflowY = 'scroll';
         }
 
-        await this.fetchProjectsByUser();
+        await this.listProjects();
 	},
 	methods: {
-        async fetchProjectsByUser(user) {
+        async listProjects() {
             this.loading = true;
-            this.projects = await projectsService.fetchProjectsByUser(user ? user.id:currentUser.id);
+            this.projects = await projectsService.list();
             this.loading = false;
         },
         async fetchUsers(query) {
@@ -193,6 +193,7 @@ export default {
 			}
 
 			this.isFetchingUsers = true;
+
 			this.searchTimeout = setTimeout(async () => {
                 this.allUsers = await usersService.search(query);
                 this.isFetchingUsers = false;
@@ -200,15 +201,7 @@ export default {
 		},
         selectProject(project) {
             this.selectedProjectId = project.id;
-            // const url = generateUrl(`/apps/contacts/circle/${project.circleId}`);
-            // window.open(url, '_blank');
         },
-        closeFilterDialog() {
-            setTimeout(() => {
-                this.showFilterDialog = false
-            }, 200);
-        },
-		downloadFile(url) {},
 	},
 }
 </script>

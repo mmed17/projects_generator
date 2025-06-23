@@ -159,37 +159,22 @@ class ProjectApiController extends Controller {
 
 
     /**
-     * @NoCSRFRequired
-     *
      * @QueryParam(name="search", type="string", nullable=true)
      * @QueryParam(name="limit", type="int", nullable=true)
      * @QueryParam(name="offset", type="int", nullable=true)
      * 
      *  @return DataResponse
      */
-    public function search(?string $search = '', ?int $limit = 20, ?int $offset = 0): DataResponse {
-        $results = $this->projectMapper->search($search, $limit, $offset);
-        return new DataResponse($results);
-    }
 
     /**
      * @NoCSRFRequired
+     * @NoAdminRequired
      *
      *  @return DataResponse
      */
     public function list(): DataResponse {
         $currentUser = $this->userSession->getUser();
-        $results = $this->projectMapper->list($currentUser->getUID());
-        return new DataResponse($results);
-    }
-
-    /**
-     * @NoCSRFRequired
-     * 
-     * @return DataResponse
-     */
-    public function getUserProjects(string $userId): DataResponse {
-        $results = $this->projectMapper->findByUserId($userId);
+        $results = $this->projectMapper->findByUserId($currentUser->getUID());
         return new DataResponse($results);
     }
 }

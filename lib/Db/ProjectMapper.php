@@ -3,7 +3,6 @@
 namespace OCA\ProjectCreatorAIO\Db;
 
 use OCP\IDBConnection;
-use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCA\Deck\Db\DeckMapper;
 
 class ProjectMapper extends DeckMapper {
@@ -55,17 +54,6 @@ class ProjectMapper extends DeckMapper {
         return $this->findEntities($qb);
     }
 
-    public function list(string $ownerId) {
-        $qb = $this->db->getQueryBuilder();
-
-        $qb->select('*')
-           ->from(self::TABLE_NAME)
-           ->where($qb->expr()->eq('owner_id', $qb->createNamedParameter($ownerId)))
-           ->orderBy('created_at', 'DESC');
-        
-        return $this->findEntities($qb);
-    }
-
     public function findByUserId(string $userId): array {
         $qb = $this->db->getQueryBuilder();
 
@@ -81,18 +69,5 @@ class ProjectMapper extends DeckMapper {
             ->orderBy('p.created_at', 'DESC');
 
         return $this->findEntities($qb);
-    }
-
-    /**
-     * @param int $boardId
-     * @return Project|null
-     */
-    public function findByBoardId(int $boardId): ?Project {
-        $qb = $this->db->getQueryBuilder();
-        $qb->select('*')
-           ->from(self::TABLE_NAME)
-           ->where($qb->expr()->eq('board_id', $qb->createNamedParameter($boardId, IQueryBuilder::PARAM_INT)));
-
-        return $this->findEntity($qb);
     }
 }
