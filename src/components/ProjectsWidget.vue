@@ -113,8 +113,6 @@ import { PROJECT_TYPES } from '../macros/project-types';
 import { UsersSerice } from '../Services/users'
 import { ProjectsService } from '../Services/projects'
 
-import $ from 'jquery';
-
 const usersService = UsersSerice.getInstance();
 const projectsService = ProjectsService.getInstance();
 
