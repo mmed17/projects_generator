@@ -113,6 +113,8 @@ import { PROJECT_TYPES } from '../macros/project-types';
 import { UsersSerice } from '../Services/users'
 import { ProjectsService } from '../Services/projects'
 
+import $ from 'jquery';
+
 const usersService = UsersSerice.getInstance();
 const projectsService = ProjectsService.getInstance();
 
@@ -148,9 +150,9 @@ export default {
 			t,
 			projects: [],
 			loading: true,
-			searchQuery: '',
+			searchQuery: null,
             folderSvg,
-            selectedProjectId: '',
+            selectedProjectId: null,
             showFilterDialog: false,
             isFetchingUsers: false,
             selectedUser: null,
@@ -200,7 +202,23 @@ export default {
 			}, 300);
 		},
         selectProject(project) {
-            this.selectedProjectId = project.id;
+            let eventPayload = null;
+
+            if (this.selectedProjectId === project.id) {
+                this.selectedProjectId = null;
+            } else {
+                this.selectedProjectId = project.id;
+                eventPayload = {
+                    projectId: project.id,
+                    boardId: project.boardId
+                };
+            }
+
+            const event = new CustomEvent('projectcreatoraio:project-selected', {
+                detail: eventPayload
+            });
+
+            document.dispatchEvent(event);
         },
 	},
 }
