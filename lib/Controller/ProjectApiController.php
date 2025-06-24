@@ -47,7 +47,7 @@ class ProjectApiController extends Controller {
             $share->setNode($folder);
             $share->setShareType(Share::SHARE_TYPE_CIRCLE);
             $share->setSharedWith($circleId);
-            $share->setPermissions(Constants::PERMISSION_READ);
+            $share->setPermissions(Constants::PERMISSION_READ | Constants::PERMISSION_CREATE);
             $share->setSharedBy($userId);
             $share->setShareOwner($userId);
 
