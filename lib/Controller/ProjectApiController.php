@@ -110,7 +110,7 @@ class ProjectApiController extends Controller {
                 $createdBoard->id,
                 Share::SHARE_TYPE_CIRCLE,
                 $createdCircle->getSingleId(),
-                false,
+                true,
                 false,
                 false
             );
