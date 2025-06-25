@@ -58,7 +58,7 @@ class ProjectMapper extends DeckMapper {
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('p.*')
-            ->from('custom_projects', 'p')
+            ->from(self::TABLE_NAME, 'p')
             ->innerJoin(
                 'p',
                 'circles_member',
@@ -69,5 +69,13 @@ class ProjectMapper extends DeckMapper {
             ->orderBy('p.created_at', 'DESC');
 
         return $this->findEntities($qb);
+    }
+
+    public function findByCircleId(string $circleId) {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('p.*')
+           ->from(self::TABLE_NAME, 'p')
+           ->where($qb->expr()->eq('p.circle_id', $qb->createNamedParameter($circleId)));
+        return $this->findEntity($qb);
     }
 }

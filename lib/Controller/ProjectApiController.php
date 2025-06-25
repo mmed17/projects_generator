@@ -1,6 +1,7 @@
 <?php
 namespace OCA\Projectcreatoraio\Controller;
 
+use OCA\ProjectCreatorAIO\Service\ProjectService;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Controller;
@@ -29,6 +30,7 @@ class ProjectApiController extends Controller {
         protected IRootFolder $rootFolder,
         protected FederatedUserService $federatedUserService,
         protected ProjectMapper $projectMapper,
+        protected ProjectService $projectService,
     ) {
         parent::__construct($appName, $request);
         $this->request = $request;
@@ -50,11 +52,11 @@ class ProjectApiController extends Controller {
             $share->setPermissions(
                 Constants::PERMISSION_READ | 
                 Constants::PERMISSION_CREATE | 
-                Constants::PERMISSION_UPDATE
+                Constants::PERMISSION_UPDATE |
+                Constants::PERMISSION_SHARE
             );
+            
             $share->setSharedBy($userId);
-            $share->setShareOwner($userId);
-
             $this->shareManager->createShare($share);
 
         } catch (NotFoundException $e) {
@@ -180,5 +182,16 @@ class ProjectApiController extends Controller {
         $currentUser = $this->userSession->getUser();
         $results = $this->projectMapper->findByUserId($currentUser->getUID());
         return new DataResponse($results);
+    }
+
+    /**
+     * @NoCSRFRequired
+     * @NoAdminRequired
+     *
+     *  @return DataResponse
+     */
+    public function projectFilesByCircleId(string $circleId): DataResponse {
+        $files = $this->projectService->getTreeForProjectTeam($circleId);
+        return new DataResponse($files);
     }
 }
