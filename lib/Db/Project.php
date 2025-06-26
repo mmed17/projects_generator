@@ -19,7 +19,8 @@ class Project extends Entity implements \JsonSerializable {
     protected ?string $circleId    = null;
     protected ?string $boardId     = null;
     protected ?string $folderName  = null;
-    protected ?DateTime $createdAt   = null;
+    protected ?int    $status      = null;
+    protected ?DateTime $createdAt = null;
     protected ?DateTime $updatedAt = null;
 
     public function __construct() {
@@ -33,6 +34,7 @@ class Project extends Entity implements \JsonSerializable {
         $this->addType('circleId',    Types::STRING);
         $this->addType('boardId',     Types::STRING);
         $this->addType('folderName',  Types::STRING);
+        $this->addType('status',      Types::INTEGER);
         $this->addType('createdAt',   Types::DATETIME);
         $this->addType('updatedAt',   Types::DATETIME);
     }
@@ -51,6 +53,7 @@ class Project extends Entity implements \JsonSerializable {
             'circleId'    => $this->circleId,
             'boardId'     => $this->boardId,
             'folderName'  => $this->folderName,
+            'status'      => $this->status,
             'createdAt'   => $this->createdAt,
             'updatedAt'   => $this->updatedAt
         ];

@@ -33,7 +33,11 @@ class ProjectService {
 
             $node = $userFolder->get($project->getFolderName());
             if ($node instanceof Folder) {
-                return $this->buildNodeInfo($node);
+                $fileTree = $this->buildNodeInfo($node);
+                return [
+                    'tree' => $fileTree,
+                    'project' => $project
+                ];
             }
             return null;
         } catch (\Exception $e) {

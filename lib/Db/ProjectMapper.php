@@ -4,6 +4,7 @@ namespace OCA\ProjectCreatorAIO\Db;
 
 use OCP\IDBConnection;
 use OCA\Deck\Db\DeckMapper;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 
 class ProjectMapper extends DeckMapper {
 
@@ -77,5 +78,19 @@ class ProjectMapper extends DeckMapper {
            ->from(self::TABLE_NAME, 'p')
            ->where($qb->expr()->eq('p.circle_id', $qb->createNamedParameter($circleId)));
         return $this->findEntity($qb);
+    }
+
+    /**
+     * Updates the status of a given project.
+     *
+     * @param int $projectId The ID of the project to update.
+     * @param int $status The new status to set.
+     */
+    public function updateProjectStatus(int $projectId, int $status): void {
+        $qb = $this->db->getQueryBuilder();
+        $qb->update(self::TABLE_NAME)
+            ->set('status', $qb->createNamedParameter($status, IQueryBuilder::PARAM_INT))
+            ->where($qb->expr()->eq('id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
+        $qb->execute();
     }
 }

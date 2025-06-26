@@ -6,6 +6,7 @@ use Closure;
 use OCP\DB\ISchemaWrapper;
 use OCP\Migration\SimpleMigrationStep;
 use OCP\Migration\IOutput;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 
 class Version0001DateTime20251906153814 extends SimpleMigrationStep {
 
@@ -50,6 +51,10 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
             $table->addColumn('folder_name', 'string', [
                 'notnull' => true,
             ]);
+            $table->addColumn('status', 'integer', [
+                'notnull' => true,
+                'default' => 1
+            ]);
 
             $table->addColumn('created_at', 'datetime', ['notnull' => true]);
             $table->addColumn('updated_at','datetime', ['notnull' => true]);
@@ -64,5 +69,9 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
         return $schema;
     }
 
+    /**
+     * This function runs after the schema has been changed.
+     * It's the perfect place to update data in existing rows.
+     */
     public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {}
 }

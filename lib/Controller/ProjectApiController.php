@@ -194,4 +194,14 @@ class ProjectApiController extends Controller {
         $files = $this->projectService->getTreeForProjectTeam($circleId);
         return new DataResponse($files);
     }
+
+    /**
+     * @NoCSRFRequired
+     *
+     *  @return bool
+     */
+    public function updateProjectStatus(int $projectId, int $status): bool {
+        $this->projectMapper->updateProjectStatus($projectId, $status);
+        return true;
+    }
 }
