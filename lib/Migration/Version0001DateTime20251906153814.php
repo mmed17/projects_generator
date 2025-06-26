@@ -64,12 +64,6 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
             $table->addIndex(['name'],'projectNameIndex', ['fulltext']);
             $table->addIndex(['owner_id'],'projectOwnerIdIndex', []);
             $table->addUniqueIndex(['circle_id'], 'projectCircleIdUnique');
-        } else {
-            $table = $schema->getTable('custom_projects');
-            $table->addColumn('status', 'integer', [
-                'notnull' => true,
-                'default' => 1
-            ]);
         }
         
         return $schema;
@@ -79,26 +73,5 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
      * This function runs after the schema has been changed.
      * It's the perfect place to update data in existing rows.
      */
-    public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {
-        // Get the database connection from the server container
-        $db = \OC::$server->getDatabaseConnection();
-
-        // Get a query builder instance
-        $qb = $db->getQueryBuilder();
-
-        // Build an UPDATE query to set the status for any old rows
-        // that might not have the default value applied.
-        $qb->update('custom_projects')
-            ->set('status', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT))
-            // This condition is a safeguard. While the `default` in the schema change
-            // should handle most cases, this ensures any rows that somehow ended up
-            // with a NULL status are also updated.
-            ->where($qb->expr()->isNull('status'));
-
-        // Execute the query
-        $qb->executeStatement();
-
-        // It's good practice to log what the migration step did.
-        $output->info('Set default status for existing projects.');
-    }
+    public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {}
 }
