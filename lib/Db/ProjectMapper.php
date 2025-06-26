@@ -93,4 +93,41 @@ class ProjectMapper extends DeckMapper {
             ->where($qb->expr()->eq('id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
         $qb->execute();
     }
+
+    
+    /**
+     * Finds a project by its associated board_id.
+     *
+     * @param int $boardId The ID of the board.
+     * @return Project|null The found project entity or null if not found.
+     */
+    public function findByBoardId(int $boardId): ?Project {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')
+           ->from($this->getTableName()) // Use getTableName() to respect the parent class
+           ->where(
+               $qb->expr()->eq('board_id', $qb->createNamedParameter($boardId, IQueryBuilder::PARAM_INT))
+           );
+
+        try {
+            return $this->findEntity($qb);
+        } catch (DoesNotExistException $e) {
+            return null;
+        }
+    }
+
+    public function findByCardId(int $cardId): ?Project {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('p.*')
+            ->from($this->getTableName(), 'p')
+            ->innerJoin('p', 'deck_stacks', 's', 'p.board_id = s.board_id')
+            ->innerJoin('s', 'deck_cards', 'c', 's.id = c.stack_id')
+            ->where($qb->expr()->eq('c.id', $qb->createNamedParameter($cardId, IQueryBuilder::PARAM_INT)));
+
+        try {
+            return $this->findEntity($qb);
+        } catch (DoesNotExistException $e) {
+            return null;
+        }
+    }
 }
