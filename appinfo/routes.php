@@ -13,6 +13,11 @@ return [
             "verb" => "GET",
         ],
         [
+            "name" => "project_api#get",
+            "url" => "/api/v1/projects/{projectId}",
+            "verb" => "GET",
+        ],
+        [
             "name" => "project_api#getProjectFolderContents",
             "url" => "/api/v1/projects/{projectId}/files",
             "verb" => "GET",

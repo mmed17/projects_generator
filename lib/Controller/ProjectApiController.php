@@ -35,6 +35,17 @@ class ProjectApiController extends Controller {
         $this->request = $request;
         $this->circlesManager->startSession();
     }
+    
+    /**
+     * @NoCSRFRequired
+     * @NoAdminRequired
+     *
+     *  @return bool
+     */
+    public function get(int $projectId) {
+        $project = $this->projectMapper->find($projectId);
+        return $project;
+    }
 
     public function randomColor(): string {
         $randomInt = random_int(0, 0xFFFFFF);
@@ -43,7 +54,6 @@ class ProjectApiController extends Controller {
 
     public function shareFolderWithCircle(Node $folder, string $circleId, string $userId): void {
         try {
-
             $share = $this->shareManager->newShare();
             $share->setNode($folder);
             $share->setShareType(Share::SHARE_TYPE_CIRCLE);
@@ -164,15 +174,6 @@ class ProjectApiController extends Controller {
             ], 500);
         }
     }
-
-
-    /**
-     * @QueryParam(name="search", type="string", nullable=true)
-     * @QueryParam(name="limit", type="int", nullable=true)
-     * @QueryParam(name="offset", type="int", nullable=true)
-     * 
-     *  @return DataResponse
-     */
 
     /**
      * @NoCSRFRequired
