@@ -58,6 +58,7 @@
                     :active="selectedProjectId === project.id"
                     :force-display-actions="true"
                     @click="selectProject(project)">
+
                     <template #icon>
                         <FolderOutline :size="30" />
                     </template>
@@ -66,7 +67,18 @@
                         {{ PROJECT_TYPES[project.type].label }}
                     </template>
 
-                    <template #extra-actions>
+                    <template #indicator>
+                        <NcChip v-if="project.status" 
+                            :text="currentProjectStatus(project)" 
+                            no-close 
+                            variant="primary" />
+
+                        <NcChip v-else 
+                            :text="currentProjectStatus(project)" 
+                            no-close />
+                    </template>
+
+                    <!-- <template #extra-actions>
                         <NcButton variant="tertiary-no-background" @click="onPreview(project)">
                             <template #icon>
                                 <NcLoadingIcon v-if="isPreviewing" :size="20" />
@@ -78,20 +90,21 @@
                                 <Download :size="20" />
                             </template>
                         </NcButton>
-                    </template>
-                    <!-- <template #actions>
+                    </template> -->
+                    <template #actions>
                         <NcActionButton
                             icon="icon-download"
                             :title="t('projectcreatoraio', 'Download project')"
-                            @click="downloadFile(project.folderName)">
+                            @click="onDownload(project)">
                             Download
                         </NcActionButton>
                         <NcActionButton
                             icon="icon-details"
-                            :title="t('projectcreatoraio', 'View details')">
+                            :title="t('projectcreatoraio', 'View details')"
+                            @click="onPreview(project)">
                             View Details
                         </NcActionButton>
-                    </template> -->
+                    </template>
                 </NcListItem>
             </ul>
         </div>
@@ -126,7 +139,8 @@ import UsersFetcher from './UsersFetcher.vue'
 import { PROJECT_TYPES } from '../macros/project-types';
 import { UsersSerice } from '../Services/users'
 import { ProjectsService } from '../Services/projects'
-import { generateUrl } from '@nextcloud/router'
+import { generateUrl } from '@nextcloud/router';
+import NcChip from '@nextcloud/vue/components/NcChip';
 
 const usersService = UsersSerice.getInstance();
 const projectsService = ProjectsService.getInstance();
@@ -156,7 +170,9 @@ export default {
         AccountPlus,
         Account,
         AccountEdit,
-        NcAvatar
+        NcAvatar,
+        EyeOutline,
+        NcChip
 	},
 	data() {
 		return {
@@ -171,7 +187,11 @@ export default {
             selectedUser: null,
             PROJECT_TYPES,
             allUsers: [],
-            searchTimeout: undefined
+            searchTimeout: undefined,
+            statuses: [
+                { id: 0, label: 'Archived' },
+                { id: 1, label: 'Active' }
+            ]
 		}
 	},
 	computed: {
@@ -186,7 +206,7 @@ export default {
 			return this.projects.filter(project => {
 				return project.name.toLowerCase().includes(this.searchQuery.toLowerCase());
 			});
-		},
+		}
 	},
 	async mounted() {
         const panelContent = this.$el.closest('.panel--content');
@@ -231,8 +251,8 @@ export default {
             document.dispatchEvent(event);
         },
         navigateToFolder(id, name) {
-            const url = generateUrl(`/apps/files/files/${id}?dir=/${name}`);
-            open(url, "_blank");
+            const url = generateUrl(`/apps/files/files/${id}`);
+            window.open(url, "_blank");
         },
         onPreview(project) {
             this.navigateToFolder(project.id, project.label);
@@ -255,6 +275,14 @@ export default {
                 [parts[1], parts[2]] = [parts[2], parts[1]];
             }
             return parts.join('/');
+        },
+        currentProjectStatus(project) {
+            if (!this.statuses || !project) {
+                return 'Unknown';
+            }
+            
+            const status = this.statuses.find(s => s.id === project.status);
+            return status ? status.label : 'Archived'; 
         }
 	},
 }

@@ -8,3 +8,7 @@
 .filter-container .action-item {
     margin-top: auto;
 }
+
+.list-item-content__details {
+    margin: auto !important;
+}
