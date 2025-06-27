@@ -3,10 +3,10 @@
 namespace OCA\ProjectCreatorAIO\Db;
 
 use OCP\IDBConnection;
-use OCA\Deck\Db\DeckMapper;
+use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 
-class ProjectMapper extends DeckMapper {
+class ProjectMapper extends QBMapper {
 
     public const TABLE_NAME = "custom_projects";
     public function __construct(IDBConnection $db) {
@@ -22,7 +22,7 @@ class ProjectMapper extends DeckMapper {
         string $ownerId,
         string $circleId,
         string $boardId,
-        string $folderName,
+        int $folderId,
     ) {
 
 		$project = new Project();
@@ -35,13 +35,26 @@ class ProjectMapper extends DeckMapper {
         $project->setOwnerId($ownerId);
         $project->setCircleId($circleId);
         $project->setBoardId($boardId);
-        $project->setFolderName($folderName);
+        $project->setFolderId($folderId);
 
         $now = new \DateTime();
         $project->setCreatedAt($now);
         $project->setUpdatedAt($now);
 
 		return $this->insert($project);
+	}
+
+    public function find(int $id) {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
+        
+        try {
+            return $this->findEntity($qb);
+        } catch(DoesNotExistException $e) {
+            return null;
+        }
 	}
 
     public function search(string $name, int $limit, int $offset) {
@@ -104,11 +117,11 @@ class ProjectMapper extends DeckMapper {
     public function findByBoardId(int $boardId): ?Project {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
-           ->from($this->getTableName()) // Use getTableName() to respect the parent class
+           ->from(self::TABLE_NAME) // Use getTableName() to respect the parent class
            ->where(
                $qb->expr()->eq('board_id', $qb->createNamedParameter($boardId, IQueryBuilder::PARAM_INT))
            );
-
+        
         try {
             return $this->findEntity($qb);
         } catch (DoesNotExistException $e) {
@@ -119,7 +132,7 @@ class ProjectMapper extends DeckMapper {
     public function findByCardId(int $cardId): ?Project {
         $qb = $this->db->getQueryBuilder();
         $qb->select('p.*')
-            ->from($this->getTableName(), 'p')
+            ->from(self::TABLE_NAME, 'p')
             ->innerJoin('p', 'deck_stacks', 's', 'p.board_id = s.board_id')
             ->innerJoin('s', 'deck_cards', 'c', 's.id = c.stack_id')
             ->where($qb->expr()->eq('c.id', $qb->createNamedParameter($cardId, IQueryBuilder::PARAM_INT)));

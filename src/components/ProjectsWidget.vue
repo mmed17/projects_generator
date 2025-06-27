@@ -66,7 +66,20 @@
                         {{ PROJECT_TYPES[project.type].label }}
                     </template>
 
-                    <template #actions>
+                    <template #extra-actions>
+                        <NcButton variant="tertiary-no-background" @click="onPreview(project)">
+                            <template #icon>
+                                <NcLoadingIcon v-if="isPreviewing" :size="20" />
+                                <EyeOutline v-else :size="20" />
+                            </template>
+                        </NcButton>
+                        <NcButton variant="tertiary-no-background" @click="onDownload(project)">
+                            <template #icon>
+                                <Download :size="20" />
+                            </template>
+                        </NcButton>
+                    </template>
+                    <!-- <template #actions>
                         <NcActionButton
                             icon="icon-download"
                             :title="t('projectcreatoraio', 'Download project')"
@@ -78,7 +91,7 @@
                             :title="t('projectcreatoraio', 'View details')">
                             View Details
                         </NcActionButton>
-                    </template>
+                    </template> -->
                 </NcListItem>
             </ul>
         </div>
@@ -99,6 +112,7 @@ import { t } from '@nextcloud/l10n'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 import Download from 'vue-material-design-icons/Download.vue';
+import EyeOutline from 'vue-material-design-icons/EyeOutline.vue';
 import Details from 'vue-material-design-icons/Details.vue';
 import FilterCog from 'vue-material-design-icons/FilterCog.vue';
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue';
@@ -112,6 +126,7 @@ import UsersFetcher from './UsersFetcher.vue'
 import { PROJECT_TYPES } from '../macros/project-types';
 import { UsersSerice } from '../Services/users'
 import { ProjectsService } from '../Services/projects'
+import { generateUrl } from '@nextcloud/router'
 
 const usersService = UsersSerice.getInstance();
 const projectsService = ProjectsService.getInstance();
@@ -215,6 +230,32 @@ export default {
             const event = new CustomEvent('projectcreatoraio:project-selected', { detail: eventPayload });
             document.dispatchEvent(event);
         },
+        navigateToFolder(id, name) {
+            const url = generateUrl(`/apps/files/files/${id}?dir=/${name}`);
+            open(url, "_blank");
+        },
+        onPreview(project) {
+            this.navigateToFolder(project.id, project.label);
+        },
+        onDownload(project) {
+
+        },
+        triggerDownload(href, filename = null) {
+            const link = document.createElement('a');
+            link.href = href;
+            if (filename) link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        },
+        normalizedPath(path) {
+            const parts = path.split('/');
+            if (parts.length >= 3) {
+                [parts[1], parts[2]] = [parts[2], parts[1]];
+            }
+            return parts.join('/');
+        }
 	},
 }
 </script>

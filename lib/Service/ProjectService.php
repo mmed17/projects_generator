@@ -2,6 +2,7 @@
 
 
 namespace OCA\ProjectCreatorAIO\Service;
+use Exception;
 use OCA\ProjectCreatorAIO\Db\ProjectMapper;
 use OCP\Files\IRootFolder;
 use OCP\Files\Folder;
@@ -19,29 +20,30 @@ class ProjectService {
     /**
      * Finds the project for a given Circle ID and builds a file tree.
      */
-    public function getTreeForProjectTeam(string $circleId): ?array {
-        $project = $this->projectMapper->findByCircleId($circleId);
+    public function getProjectFolderContents(int $projectId) {
+        $project = $this->projectMapper->find($projectId);
         if ($project === null) {
-            return null;
+            throw new Exception("Project Not found.");
         }
 
-        try {
-            $userFolder = $this->rootFolder->getUserFolder($project->getOwnerId());
-            if (!$userFolder->nodeExists($project->getFolderName())) {
-                return null;
-            }
+        $userFolder = $this->rootFolder->getUserFolder($project->getOwnerId());
+        $projectFolders = $this->rootFolder->getById($project->getFolderId());
+        
+        if(count($projectFolders) === 0) {
+            throw new Exception("Project folder is not found.");
+        }
 
-            $node = $userFolder->get($project->getFolderName());
-            if ($node instanceof Folder) {
-                $fileTree = $this->buildNodeInfo($node);
-                return [
-                    'tree' => $fileTree,
-                    'project' => $project
-                ];
-            }
-            return null;
-        } catch (\Exception $e) {
-            return null;
+        $projectFolder = $projectFolders[0];
+        if (!$userFolder->nodeExists($projectFolder->getName())) {
+            throw new Exception("Project folder is not found.");
+        }
+        
+        $node = $userFolder->get($projectFolder->getName());
+        if ($node instanceof Folder) {
+            $folder = $this->buildNodeInfo($node);
+            return [
+                'folder' => $folder
+            ];
         }
     }
 

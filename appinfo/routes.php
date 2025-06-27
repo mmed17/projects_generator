@@ -13,8 +13,8 @@ return [
             "verb" => "GET",
         ],
         [
-            "name" => "project_api#projectFilesByCircleId",
-            "url" => "/api/v1/projects/circle/{circleId}/files",
+            "name" => "project_api#getProjectFolderContents",
+            "url" => "/api/v1/projects/{projectId}/files",
             "verb" => "GET",
         ],
         [

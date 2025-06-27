@@ -3,7 +3,6 @@ namespace OCA\Projectcreatoraio\Controller;
 
 use OCA\ProjectCreatorAIO\Service\ProjectService;
 use OCP\AppFramework\Http\DataResponse;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Controller;
 use OCP\IRequest;
 use OCP\AppFramework\NoCSRFRequired;
@@ -55,7 +54,6 @@ class ProjectApiController extends Controller {
                 Constants::PERMISSION_UPDATE |
                 Constants::PERMISSION_SHARE
             );
-            
             $share->setSharedBy($userId);
             $this->shareManager->createShare($share);
 
@@ -122,7 +120,11 @@ class ProjectApiController extends Controller {
             );
 
             // 5. Share folder with circle
-            $this->shareFolderWithCircle($createdFolder, $createdCircle->getSingleId(), $currentUser->getUID());
+            $this->shareFolderWithCircle(
+                $createdFolder, 
+                $createdCircle->getSingleId(), 
+                $currentUser->getUID()
+            );
 
             // 6. Insert project into DB (if applicable)
             $project = $this->projectMapper->createProject(
@@ -134,7 +136,7 @@ class ProjectApiController extends Controller {
                 $currentUser->getUID(), 
                 $createdCircle->getSingleId(), 
                 $createdBoard->id,
-                $folderName
+                $createdFolder->getId(),
             );
 
             return new DataResponse([
@@ -190,9 +192,9 @@ class ProjectApiController extends Controller {
      *
      *  @return DataResponse
      */
-    public function projectFilesByCircleId(string $circleId): DataResponse {
-        $files = $this->projectService->getTreeForProjectTeam($circleId);
-        return new DataResponse($files);
+    public function getProjectFolderContents(int $projectId): DataResponse {
+        $folder = $this->projectService->getProjectFolderContents($projectId);
+        return new DataResponse($folder);
     }
 
     /**

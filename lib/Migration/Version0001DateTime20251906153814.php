@@ -6,10 +6,9 @@ use Closure;
 use OCP\DB\ISchemaWrapper;
 use OCP\Migration\SimpleMigrationStep;
 use OCP\Migration\IOutput;
-use OCP\DB\QueryBuilder\IQueryBuilder;
 
 class Version0001DateTime20251906153814 extends SimpleMigrationStep {
-
+    public function __construct() {}
     public function preSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {}
 
     public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ISchemaWrapper {
@@ -48,7 +47,7 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
             $table->addColumn('board_id', 'string', [
                 'notnull' => true,
             ]);
-            $table->addColumn('folder_name', 'string', [
+            $table->addColumn('folder_id', 'integer', [
                 'notnull' => true,
             ]);
             $table->addColumn('status', 'integer', [
@@ -66,12 +65,27 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
             $table->addUniqueIndex(['circle_id'], 'projectCircleIdUnique');
         } else {
             $table = $schema->getTable('custom_projects');
-            $table->addColumn('status', 'integer', [
-                'notnull' => true,
-                'default' => 1
-            ]);
+            if(!$table->hasColumn('status')) {
+                $table->addColumn('status', 'integer', [
+                    'notnull' => true,
+                    'default' => 1
+                ]);
+            }
+
+            if($table->hasColumn('folder_path')) {
+                $table->dropColumn('folder_path');
+            }
+
+            if($table->hasColumn('folder_name')) {
+                $table->dropColumn('folder_name');
+            }
+
+            if(!$table->hasColumn('folder_id')) {
+                $table->addColumn('folder_id', 'integer', [
+                    'notnull' => true
+                ]);
+            }
         }
-        
         return $schema;
     }
 
@@ -79,26 +93,5 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
      * This function runs after the schema has been changed.
      * It's the perfect place to update data in existing rows.
      */
-    public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {
-        // Get the database connection from the server container
-        $db = \OC::$server->getDatabaseConnection();
-
-        // Get a query builder instance
-        $qb = $db->getQueryBuilder();
-
-        // Build an UPDATE query to set the status for any old rows
-        // that might not have the default value applied.
-        $qb->update('custom_projects')
-            ->set('status', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT))
-            // This condition is a safeguard. While the `default` in the schema change
-            // should handle most cases, this ensures any rows that somehow ended up
-            // with a NULL status are also updated.
-            ->where($qb->expr()->isNull('status'));
-
-        // Execute the query
-        $qb->executeStatement();
-
-        // It's good practice to log what the migration step did.
-        $output->info('Set default status for existing projects.');
-    }
+    public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {}
 }
