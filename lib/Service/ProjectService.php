@@ -1,6 +1,5 @@
 <?php
 
-
 namespace OCA\ProjectCreatorAIO\Service;
 use Exception;
 use OCA\ProjectCreatorAIO\Db\ProjectMapper;
@@ -20,7 +19,7 @@ class ProjectService {
     /**
      * Finds the project for a given Circle ID and builds a file tree.
      */
-    public function getProjectFolderContents(int $projectId) {
+    public function getProjectFiles(int $projectId) {
         $project = $this->projectMapper->find($projectId);
         if ($project === null) {
             throw new Exception("Project Not found.");
@@ -29,7 +28,7 @@ class ProjectService {
         $userFolder = $this->rootFolder->getUserFolder($project->getOwnerId());
         $projectFolders = $this->rootFolder->getById($project->getFolderId());
         
-        if(count($projectFolders) === 0) {
+        if (count($projectFolders) === 0) {
             throw new Exception("Project folder is not found.");
         }
 
@@ -40,9 +39,9 @@ class ProjectService {
         
         $node = $userFolder->get($projectFolder->getName());
         if ($node instanceof Folder) {
-            $folder = $this->buildNodeInfo($node);
+            $files = $this->buildNodeInfo($node);
             return [
-                'folder' => $folder
+                'files' => $files
             ];
         }
     }
@@ -67,5 +66,10 @@ class ProjectService {
         }
 
         return $info;
+    }
+    
+    public function findProjectByBoard(int $boardId) {
+        $project = $this->projectMapper->findByBoardId($boardId);
+        return $project;
     }
 }

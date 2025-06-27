@@ -11,14 +11,12 @@
 	<namespace>ProjectCreatorAIO</namespace>
 	<category>customization</category>
 	<bugs>https://github.com/mmed17/projects_generator/issues</bugs>
-	<migrations>
-		<version>Version0001DateTime20251906153814</version>
-	</migrations>
 	<dependencies>
 		<nextcloud min-version="29" max-version="31"/>
 		<app id="circles"/>
 		<app id="deck" />
 		<app id="files" />
+		<app id="contacts" />
 	</dependencies>
 	<dashboard>
 		<widget>projectcreatoraio</widget>

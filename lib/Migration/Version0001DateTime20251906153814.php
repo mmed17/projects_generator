@@ -8,8 +8,6 @@ use OCP\Migration\SimpleMigrationStep;
 use OCP\Migration\IOutput;
 
 class Version0001DateTime20251906153814 extends SimpleMigrationStep {
-    public function __construct() {}
-    public function preSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {}
 
     public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ISchemaWrapper {
         $schema = $schemaClosure();
@@ -54,7 +52,6 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
                 'notnull' => true,
                 'default' => 1
             ]);
-
             $table->addColumn('created_at', 'datetime', ['notnull' => true]);
             $table->addColumn('updated_at','datetime', ['notnull' => true]);
 
@@ -94,4 +91,5 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
      * It's the perfect place to update data in existing rows.
      */
     public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {}
+    public function preSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {}
 }

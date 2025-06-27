@@ -8,7 +8,6 @@ use OCP\DB\Types;
 class Project extends Entity implements \JsonSerializable {
     public $id;
 
-    // make each column property nullable with a default
     protected ?string $name        = null;
     protected ?string $label       = null;
     protected ?string $number      = null;
@@ -22,7 +21,7 @@ class Project extends Entity implements \JsonSerializable {
     protected ?int    $status      = null;
     protected ?DateTime $createdAt = null;
     protected ?DateTime $updatedAt = null;
-    
+
     public function __construct() {
         $this->addType('name',        Types::STRING);
         $this->addType('label',       Types::STRING);
@@ -39,7 +38,6 @@ class Project extends Entity implements \JsonSerializable {
         $this->addType('updatedAt',   Types::DATETIME);
     }
 
-    #[\ReturnTypeWillChange]
     public function jsonSerialize(): array {
         return [
             'id'          => $this->id,

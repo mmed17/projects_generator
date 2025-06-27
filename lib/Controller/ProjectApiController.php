@@ -193,18 +193,32 @@ class ProjectApiController extends Controller {
      *
      *  @return DataResponse
      */
-    public function getProjectFolderContents(int $projectId): DataResponse {
-        $folder = $this->projectService->getProjectFolderContents($projectId);
+    public function getProjectFiles(int $projectId): DataResponse {
+        $folder = $this->projectService->getProjectFiles($projectId);
         return new DataResponse($folder);
     }
 
     /**
      * @NoCSRFRequired
+     * @NoAdminRequired
      *
      *  @return bool
      */
     public function updateProjectStatus(int $projectId, int $status): bool {
         $this->projectMapper->updateProjectStatus($projectId, $status);
         return true;
+    }
+
+    /**
+     * @NoCSRFRequired
+     * @NoAdminRequired
+     *
+     *  @return DataResponse
+     */
+    public function getProjectByCircleId(string $circleId): DataResponse {
+        $project = $this->projectMapper->findByCircleId($circleId);
+        return new DataResponse([
+            'project' => $project
+        ]);
     }
 }

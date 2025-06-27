@@ -7,7 +7,6 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 
 class ProjectMapper extends QBMapper {
-
     public const TABLE_NAME = "custom_projects";
     public function __construct(IDBConnection $db) {
         parent::__construct($db, self::TABLE_NAME, Project::class);
@@ -77,7 +76,7 @@ class ProjectMapper extends QBMapper {
                 'p',
                 'circles_member',
                 'm',
-                $qb->expr()->eq('p.circle_id', 'm.circle_id')
+                'p.circle_id = m.circle_id'
             )
             ->where($qb->expr()->eq('m.user_id', $qb->createNamedParameter($userId)))
             ->orderBy('p.created_at', 'DESC');
@@ -107,23 +106,24 @@ class ProjectMapper extends QBMapper {
         $qb->execute();
     }
 
-    
     /**
      * Finds a project by its associated board_id.
      *
      * @param int $boardId The ID of the board.
      * @return Project|null The found project entity or null if not found.
      */
-    public function findByBoardId(int $boardId): ?Project {
+    public function findByBoardId($boardId) {        
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
-           ->from(self::TABLE_NAME) // Use getTableName() to respect the parent class
+           ->from(self::TABLE_NAME)
            ->where(
                $qb->expr()->eq('board_id', $qb->createNamedParameter($boardId, IQueryBuilder::PARAM_INT))
            );
-        
         try {
-            return $this->findEntity($qb);
+            $row = $qb->execute()->fetch();
+            return ($row === false) 
+                ? null 
+                : Project::fromRow($row);
         } catch (DoesNotExistException $e) {
             return null;
         }

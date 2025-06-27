@@ -18,7 +18,12 @@ return [
             "verb" => "GET",
         ],
         [
-            "name" => "project_api#getProjectFolderContents",
+            "name" => "project_api#getProjectByCircleId",
+            "url" => "/api/v1/projects/circle/{circleId}",
+            "verb" => "GET",
+        ],
+        [
+            "name" => "project_api#getProjectFiles",
             "url" => "/api/v1/projects/{projectId}/files",
             "verb" => "GET",
         ],
