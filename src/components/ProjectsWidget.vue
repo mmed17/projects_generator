@@ -87,6 +87,12 @@
                             @click="onPreview(project)">
                             View Details
                         </NcActionButton>
+                        <NcActionButton
+                            icon="icon-screen"
+                            :title="t('projectcreatoraio', 'View details')"
+                            @click="onPreview(project)">
+                            Project Page
+                        </NcActionButton>
                     </template>
                 </NcListItem>
             </ul>
