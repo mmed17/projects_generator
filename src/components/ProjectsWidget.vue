@@ -68,29 +68,12 @@
                     </template>
 
                     <template #indicator>
-                        <NcChip v-if="project.status" 
-                            :text="currentProjectStatus(project)" 
+                        <NcChip
                             no-close 
-                            variant="primary" />
-
-                        <NcChip v-else 
                             :text="currentProjectStatus(project)" 
-                            no-close />
+                            :variant="project.status && selectedProjectId !== project.id ? 'primary':'secondary'" />
                     </template>
 
-                    <!-- <template #extra-actions>
-                        <NcButton variant="tertiary-no-background" @click="onPreview(project)">
-                            <template #icon>
-                                <NcLoadingIcon v-if="isPreviewing" :size="20" />
-                                <EyeOutline v-else :size="20" />
-                            </template>
-                        </NcButton>
-                        <NcButton variant="tertiary-no-background" @click="onDownload(project)">
-                            <template #icon>
-                                <Download :size="20" />
-                            </template>
-                        </NcButton>
-                    </template> -->
                     <template #actions>
                         <NcActionButton
                             icon="icon-download"
