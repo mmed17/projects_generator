@@ -147,8 +147,9 @@ class ProjectApiController extends Controller {
                 $createdCircle->getSingleId(), 
                 $createdBoard->id,
                 $createdFolder->getId(),
+                $createdFolder->getPath()
             );
-
+            
             return new DataResponse([
                 'message' => 'Project created successfully',
                 'projectId' => $project->id,

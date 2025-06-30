@@ -21,7 +21,8 @@ class ProjectMapper extends QBMapper {
         string $ownerId,
         string $circleId,
         string $boardId,
-        int $folderId,
+        int    $folderId,
+        string $folderPath
     ) {
 
 		$project = new Project();
@@ -35,6 +36,7 @@ class ProjectMapper extends QBMapper {
         $project->setCircleId($circleId);
         $project->setBoardId($boardId);
         $project->setFolderId($folderId);
+        $project->setFolderPath($folderPath);
 
         $now = new \DateTime();
         $project->setCreatedAt($now);

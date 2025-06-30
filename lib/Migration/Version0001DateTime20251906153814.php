@@ -48,6 +48,9 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
             $table->addColumn('folder_id', 'integer', [
                 'notnull' => true,
             ]);
+            $table->addColumn('folder_path', 'string', [
+                'notnull' => true,
+            ]);
             $table->addColumn('status', 'integer', [
                 'notnull' => true,
                 'default' => 1
@@ -62,19 +65,22 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
             $table->addUniqueIndex(['circle_id'], 'projectCircleIdUnique');
         } else {
             $table = $schema->getTable('custom_projects');
+            
+            if($table->hasColumn('folder_name')) {
+                $table->dropColumn('folder_name');
+            }
+
             if(!$table->hasColumn('status')) {
                 $table->addColumn('status', 'integer', [
                     'notnull' => true,
                     'default' => 1
                 ]);
             }
-
-            if($table->hasColumn('folder_path')) {
-                $table->dropColumn('folder_path');
-            }
-
-            if($table->hasColumn('folder_name')) {
-                $table->dropColumn('folder_name');
+            
+            if(!$table->hasColumn('folder_path')) {
+                $table->addColumn('folder_path', 'string', [
+                    'notnull' => true
+                ]);
             }
 
             if(!$table->hasColumn('folder_id')) {

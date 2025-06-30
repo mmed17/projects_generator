@@ -82,12 +82,6 @@
                             Download
                         </NcActionButton>
                         <NcActionButton
-                            icon="icon-details"
-                            :title="t('projectcreatoraio', 'View details')"
-                            @click="onPreview(project)">
-                            View Details
-                        </NcActionButton>
-                        <NcActionButton
                             icon="icon-screen"
                             :title="t('projectcreatoraio', 'View details')"
                             @click="onPreview(project)">
@@ -121,6 +115,7 @@ import AccountPlus from 'vue-material-design-icons/AccountPlus.vue';
 import Account from 'vue-material-design-icons/Account.vue';
 import AccountEdit from "vue-material-design-icons/AccountEdit.vue";
 import NcAvatar from '@nextcloud/vue/components/NcAvatar';
+import NcChip from '@nextcloud/vue/components/NcChip';
 import { getCurrentUser } from '@nextcloud/auth'
 
 import folderSvg from '@mdi/svg/svg/folder.svg?raw'
@@ -128,11 +123,12 @@ import UsersFetcher from './UsersFetcher.vue'
 import { PROJECT_TYPES } from '../macros/project-types';
 import { UsersSerice } from '../Services/users'
 import { ProjectsService } from '../Services/projects'
-import { generateUrl } from '@nextcloud/router';
-import NcChip from '@nextcloud/vue/components/NcChip';
+import { generateUrl, generateRemoteUrl } from '@nextcloud/router';
+import { createClient } from 'webdav';
 
 const usersService = UsersSerice.getInstance();
 const projectsService = ProjectsService.getInstance();
+const client = createClient(generateRemoteUrl('dav'));
 
 export default {
 	name: 'ProjectsWidget',
@@ -239,15 +235,30 @@ export default {
             const event = new CustomEvent('projectcreatoraio:project-selected', { detail: eventPayload });
             document.dispatchEvent(event);
         },
-        navigateToFolder(id, name) {
-            const url = generateUrl(`/apps/files/files/${id}`);
+        navigateToFolder( dir) {
+            const url = generateUrl(`/apps/files/files?dir=/${dir}`);
             window.open(url, "_blank");
         },
         onPreview(project) {
-            this.navigateToFolder(project.id, project.label);
+            if(project.folderPath) {
+                const parts = project.folderPath.split('/');
+                const folderName = parts[parts.length - 1];
+                this.navigateToFolder(encodeURIComponent(folderName));
+            }
         },
         onDownload(project) {
+            if (!project.folderPath) {
+                console.error('Cannot download project, folder name is missing.', project)
+                return;
+            }
 
+            const path = this.normalizedPath(project.folderPath);
+            const downloadUrl = new URL(client.getFileDownloadLink(path));
+
+            downloadUrl.searchParams.append('accept', 'zip')
+            console.log("href", downloadUrl.href);
+
+            this.triggerDownload(downloadUrl.href);
         },
         triggerDownload(href, filename = null) {
             const link = document.createElement('a');
