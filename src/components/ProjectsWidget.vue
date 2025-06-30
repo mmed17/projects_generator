@@ -64,7 +64,7 @@
                     </template>
                     
                     <template #subname>
-                        {{ PROJECT_TYPES[project.type].label }}
+                        {{ PROJECT_TYPES[project.type]?.label }}
                     </template>
 
                     <template #indicator>
@@ -219,6 +219,18 @@ export default {
                 this.isFetchingUsers = false;
 			}, 300);
 		},
+        async fetchProjectsByUser(user) {
+            try {
+                if(user) {
+                    this.projects = await projectsService.fetchProjectsByUser(user.id);
+                } else {
+                    this.projects = await projectsService.list();
+                }
+            } catch(error) {
+                console.error('Error searching for user projects', error);
+                this.projects = [];
+            }
+        },
         selectProject(project) {
             let eventPayload = null;
 
@@ -235,16 +247,12 @@ export default {
             const event = new CustomEvent('projectcreatoraio:project-selected', { detail: eventPayload });
             document.dispatchEvent(event);
         },
-        navigateToFolder( dir) {
-            const url = generateUrl(`/apps/files/files?dir=/${dir}`);
+        navigateToProjectPage(circleId) {
+            const url = generateUrl(`/apps/contacts/circle/${circleId}`);
             window.open(url, "_blank");
         },
         onPreview(project) {
-            if(project.folderPath) {
-                const parts = project.folderPath.split('/');
-                const folderName = parts[parts.length - 1];
-                this.navigateToFolder(encodeURIComponent(folderName));
-            }
+            this.navigateToProjectPage(project.circleId);
         },
         onDownload(project) {
             if (!project.folderPath) {

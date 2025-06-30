@@ -17,6 +17,8 @@ use OCP\Share;
 use OCP\Constants;
 use OCA\ProjectCreatorAIO\Db\ProjectMapper;
 use OCA\Circles\Model\Member;
+use OCP\AppFramework\OCS\OCSNotFoundException;
+use OCP\AppFramework\Http\OCS\OCSForbiddenException; 
 
 class ProjectApiController extends Controller {
     public function __construct(
@@ -221,5 +223,21 @@ class ProjectApiController extends Controller {
         return new DataResponse([
             'project' => $project
         ]);
+    }
+
+    /**
+     * Get all projects for a specific user.
+     *
+     * @NoCSRFRequired
+     * @AdminRequired
+     *
+     * @param string $userId The user ID to fetch projects for.
+     * @return DataResponse
+     * @throws OCSForbiddenException if the current user is not an admin
+     * @throws OCSNotFoundException if the specified user does not exist
+     */
+    public function listByUser(string $userId): DataResponse {
+        $projects = $this->projectMapper->findByUserId($userId);
+        return new DataResponse($projects);
     }
 }
