@@ -6,17 +6,10 @@ use OCP\Files\Node;
 
 class FileTreeService {
     /**
-     * Takes a starting folder and recursively builds an array of its contents.
+     * Takes a starting Node and recursively builds an array representation of it,
+     * including its children if it's a folder.
      */
-    public function buildTreeFromNode(Folder $folder): array {
-        $children = $folder->getDirectoryListing();
-        return array_map([$this, 'transformNodeToArray'], $children);
-    }
-
-    /**
-     * The recursive function that converts a Node into a structured array.
-     */
-    private function transformNodeToArray(Node $node): array {
+    public function buildTree(Node $node): array {
         $info = [
             'id'       => $node->getId(),
             'name'     => $node->getName(),
@@ -27,7 +20,8 @@ class FileTreeService {
         ];
         
         if ($node instanceof Folder) {
-            $info['children'] = $this->buildTreeFromNode($node);
+            $children = $node->getDirectoryListing();
+            $info['children'] = array_map([$this, 'buildTree'], $children);
         }
 
         return $info;

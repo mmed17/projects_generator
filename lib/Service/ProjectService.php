@@ -50,24 +50,24 @@ class ProjectService {
         $createdFolders = [];
 
         try {
-            $currentUser = $this->userSession->getUser();
+            $owner = $this->userSession->getUser();
             
             $createdCircle = $this->createCircleForProject(
                 $name, 
                 $members, 
-                $currentUser
+                $owner
             );
 
             $createdBoard = $this->createBoardForProject(
                 $name, 
-                $currentUser, 
+                $owner, 
                 $createdCircle->getSingleId()
             );
 
             $createdFolders = $this->createFoldersForProject(
                 $name, 
                 $members, 
-                $currentUser, 
+                $owner, 
                 $createdCircle->getSingleId()
             );
             
@@ -77,7 +77,7 @@ class ProjectService {
                 $type, 
                 $address, 
                 $description,
-                $currentUser->getUID(),
+                $owner->getUID(),
                 $createdCircle->getSingleId(),
                 $createdBoard->getId(),
                 $createdFolders['shared']->getId(),
@@ -88,15 +88,13 @@ class ProjectService {
 
         } catch (Throwable $e) {
 
-            $this->clearProjectResidus(
+            $this->cleanupResources(
                 $createdBoard, 
                 $createdCircle, 
                 $createdFolders['all']
             );
 
-            throw new Exception(
-                'Failed to create project: ' . $e->getMessage(), 500, $e
-            );
+            throw new Exception($e, 500);
         }
     }
 
@@ -145,39 +143,42 @@ class ProjectService {
      * @return array{'shared': Folder, 'private': Folder[], 'all': Folder[]}
      */
     private function createFoldersForProject(
-        string $projectName, 
-        array $members, IUser 
-        $owner, string 
-        $circleId
+        string $projectName, array $members, IUser $owner, string $circleId
     ): array {
-        $userFolder = $this->rootFolder->getUserFolder($owner->getUID());
+        $ownerFolder = $this->rootFolder->getUserFolder($owner->getUID());
         $allCreatedFolders = [];
-
+        
         // Create shared folders 
         $sharedFolderName = $this->getUniqueFolderName(
-            $userFolder, 
-            $projectName, 'Shared Files'
+            $projectName, 
+            'Shared Files', 
+            $ownerFolder
         );
         
-        $sharedFolder = $userFolder->newFolder($sharedFolderName);
+        $sharedFolder = $ownerFolder->newFolder($sharedFolderName);
         $allCreatedFolders[] = $sharedFolder;
-        $this->shareFolderWithCircle($sharedFolder, $circleId, $owner->getUID());
+
+        $this->shareFolderWithCircle(
+            $sharedFolder, 
+            $circleId, 
+            $owner->getUID()
+        );
 
         // Create private folders for each member
         $privateFolders = [];
         foreach ($members as $memberId) {
-            $suffix = "Private ({$memberId})";
+
             $privateFolderName = $this->getUniqueFolderName(
-                $userFolder, 
                 $projectName, 
-                $suffix
+                "Private Files ($memberId)" ,
+                $ownerFolder
             );
 
-            $privateFolder = $userFolder->newFolder($privateFolderName);
-
+            $privateFolder = $ownerFolder->newFolder($privateFolderName);
+            
             $allCreatedFolders[] = $privateFolder;
             $privateFolders[] = $privateFolder;
-
+            
             $this->shareFolderWithUser($privateFolder, $memberId, $owner->getUID());
         }
 
@@ -217,48 +218,50 @@ class ProjectService {
         $this->shareManager->createShare($share);
     }
 
-    private function getUniqueFolderName(Folder $baseFolder, string $projectName, string $suffix): string {
+    private function getUniqueFolderName(string $projectName, string $suffix, Folder $folder): string {
         $folderName = "{$projectName} - {$suffix}";
-        if (!$baseFolder->nodeExists($folderName)) {
+
+        if (!$folder->nodeExists($folderName)) {
             return $folderName;
         }
+
         $counter = 2;
         while (true) {
             $folderName = "{$projectName} ({$counter}) - {$suffix}";
-            if (!$baseFolder->nodeExists($folderName)) {
+            if (!$folder->nodeExists($folderName)) {
                 return $folderName;
             }
             $counter++;
         }
     }
 
-    private function clearProjectResidus(
-        ?Board $createdBoard, 
-        ?Circle $createdCircle, 
-        ?array $createdFolders
+    private function cleanupResources(
+        ?Board  $board, 
+        ?Circle $circle, 
+        ?array  $folders
     ): void {
-        $currentUser = $this->userSession->getUser();
+        $user = $this->userSession->getUser();
 
-        if (!empty($createdFolders)) {
-            foreach ($createdFolders as $folder) {
+        if (!empty($folders)) {
+            foreach ($folders as $folder) {
                 if ($folder !== null && $folder->isDeletable()) {
                     $folder->delete();
                 }
             }
         }
 
-        if ($createdBoard !== null) {
-            $this->boardService->delete($createdBoard->getId());
+        if ($board !== null) {
+            $this->boardService->delete($board->getId());
         }
         
-        if ($createdCircle !== null) {
+        if ($circle !== null) {
             $federatedUser = $this->circlesManager->getFederatedUser(
-                $currentUser->getUID(),
+                $user->getUID(),
                 Member::TYPE_USER
             );
             
             $this->circlesManager->startSession($federatedUser);
-            $this->circlesManager->destroyCircle($createdCircle->getSingleId());
+            $this->circlesManager->destroyCircle($circle->getSingleId());
         }
     }
 
@@ -272,16 +275,18 @@ class ProjectService {
         }
 
         try {
-            $projectFolders = $this->rootFolder->getById($project->getFolderId());
+            $rootFolder = $this->rootFolder->getUserFolder($project->getOwnerId());
+            $projectFolders = $rootFolder->getById($project->getFolderId());
+
             if (empty($projectFolders)) {
                 throw new NotFoundException("Project folder node not found on the filesystem.");
             }
 
             $projectFolder = $projectFolders[0];
-
-            $files = $this->fileTreeService->buildTreeFromNode($projectFolder);
             
-            return ['files' => $files];
+            $files = $this->fileTreeService->buildTree($projectFolder);
+            
+            return ['files' => [$files]];
 
         } catch (NotFoundException $e) {
             throw new Exception("Project folder is not found or has been deleted.");
