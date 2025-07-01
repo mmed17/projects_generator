@@ -81,10 +81,10 @@ class ProjectService {
                 $createdFolders['shared']->getPath()
             );
 
-            // Here logic to link private folders to the project
-
             return $project;
+
         } catch (\Throwable $e) {
+            
             if (!empty($createdFolders)) {
                 foreach ($createdFolders['all'] as $folder) {
                     if ($folder !== null && $folder->isDeletable()) {
@@ -92,13 +92,22 @@ class ProjectService {
                     }
                 }
             }
+
             if ($createdBoard !== null) {
                 $this->boardService->delete($createdBoard->getId());
             }
+
             if ($createdCircle !== null) {
+                $federatedUser = $this->circlesManager->getFederatedUser(
+                    $currentUser->getUID(),
+                    Member::TYPE_USER
+                );
+                
+                $this->circlesManager->startSession($federatedUser);
                 $this->circlesManager->destroyCircle($createdCircle->getSingleId());
             }
-            throw new \Exception(
+
+            throw new Exception(
                 'Failed to create project: ' . $e->getMessage(), 500, $e
             );
         }
