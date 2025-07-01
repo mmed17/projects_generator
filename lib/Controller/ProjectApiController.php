@@ -88,8 +88,8 @@ class ProjectApiController extends Controller {
      *  @return DataResponse
      */
     public function getProjectFiles(int $projectId): DataResponse {
-        $folder = $this->projectService->getProjectFiles($projectId);
-        return new DataResponse($folder);
+        $files = $this->projectService->getProjectFiles($projectId);
+        return new DataResponse($files);
     }
     
     /**

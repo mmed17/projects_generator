@@ -1,7 +1,6 @@
 <?php
 
 namespace OCA\ProjectCreatorAIO\Service;
-use Exception;
 use OCA\ProjectCreatorAIO\Db\ProjectMapper;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
@@ -16,8 +15,11 @@ use OCP\Files\Folder;
 use OCP\Files\Node;
 use OCP\IUser;
 use OCA\ProjectCreatorAIO\Db\Project;
+use OCA\Deck\Db\Board;
 use OCA\Circles\Model\Circle;
-use OCA\Deck\Model\Board;
+use OCA\Circles\Model\Member;
+use Throwable;
+use Exception;
  
 class ProjectService {
     public function __construct(
@@ -27,7 +29,8 @@ class ProjectService {
         protected BoardService $boardService,
         protected IRootFolder $rootFolder,
         protected FederatedUserService $federatedUserService,
-        protected ProjectMapper $projectMapper
+        protected ProjectMapper $projectMapper,
+        protected FileTreeService $fileTreeService,
     ) {}
 
     /**
@@ -83,29 +86,13 @@ class ProjectService {
 
             return $project;
 
-        } catch (\Throwable $e) {
-            
-            if (!empty($createdFolders)) {
-                foreach ($createdFolders['all'] as $folder) {
-                    if ($folder !== null && $folder->isDeletable()) {
-                        $folder->delete();
-                    }
-                }
-            }
+        } catch (Throwable $e) {
 
-            if ($createdBoard !== null) {
-                $this->boardService->delete($createdBoard->getId());
-            }
-
-            if ($createdCircle !== null) {
-                $federatedUser = $this->circlesManager->getFederatedUser(
-                    $currentUser->getUID(),
-                    Member::TYPE_USER
-                );
-                
-                $this->circlesManager->startSession($federatedUser);
-                $this->circlesManager->destroyCircle($createdCircle->getSingleId());
-            }
+            $this->clearProjectResidus(
+                $createdBoard, 
+                $createdCircle, 
+                $createdFolders['all']
+            );
 
             throw new Exception(
                 'Failed to create project: ' . $e->getMessage(), 500, $e
@@ -202,7 +189,13 @@ class ProjectService {
         $share->setNode($folder);
         $share->setShareType(Share::SHARE_TYPE_CIRCLE);
         $share->setSharedWith($circleId);
-        $share->setPermissions(Constants::PERMISSION_READ | Constants::PERMISSION_CREATE | Constants::PERMISSION_UPDATE | Constants::PERMISSION_SHARE);
+        $share->setPermissions(
+            Constants::PERMISSION_READ   | 
+            Constants::PERMISSION_CREATE | 
+            Constants::PERMISSION_UPDATE | 
+            Constants::PERMISSION_SHARE
+        );
+
         $share->setSharedBy($userId);
         $this->shareManager->createShare($share);
     }
@@ -212,7 +205,14 @@ class ProjectService {
         $share->setNode($folder);
         $share->setShareType(Share::SHARE_TYPE_USER);
         $share->setSharedWith($userId);
-        $share->setPermissions(Constants::PERMISSION_READ | Constants::PERMISSION_CREATE | Constants::PERMISSION_UPDATE | Constants::PERMISSION_DELETE | Constants::PERMISSION_SHARE);
+        $share->setPermissions(
+            Constants::PERMISSION_READ   | 
+            Constants::PERMISSION_CREATE | 
+            Constants::PERMISSION_UPDATE | 
+            Constants::PERMISSION_DELETE | 
+            Constants::PERMISSION_SHARE
+        );
+
         $share->setSharedBy($ownerId);
         $this->shareManager->createShare($share);
     }
@@ -229,6 +229,36 @@ class ProjectService {
                 return $folderName;
             }
             $counter++;
+        }
+    }
+
+    private function clearProjectResidus(
+        ?Board $createdBoard, 
+        ?Circle $createdCircle, 
+        ?array $createdFolders
+    ): void {
+        $currentUser = $this->userSession->getUser();
+
+        if (!empty($createdFolders)) {
+            foreach ($createdFolders as $folder) {
+                if ($folder !== null && $folder->isDeletable()) {
+                    $folder->delete();
+                }
+            }
+        }
+
+        if ($createdBoard !== null) {
+            $this->boardService->delete($createdBoard->getId());
+        }
+        
+        if ($createdCircle !== null) {
+            $federatedUser = $this->circlesManager->getFederatedUser(
+                $currentUser->getUID(),
+                Member::TYPE_USER
+            );
+            
+            $this->circlesManager->startSession($federatedUser);
+            $this->circlesManager->destroyCircle($createdCircle->getSingleId());
         }
     }
 
@@ -250,11 +280,10 @@ class ProjectService {
             $projectFolder = $projectFolders[0];
 
             $files = $this->fileTreeService->buildTreeFromNode($projectFolder);
-
+            
             return ['files' => $files];
 
         } catch (NotFoundException $e) {
-            // This catches if the folder ID is invalid or the folder was deleted.
             throw new Exception("Project folder is not found or has been deleted.");
         }
     }
