@@ -256,7 +256,7 @@ export default {
         },
         onDownload(project) {
             if (!project.folderPath) {
-                console.error('Cannot download project, folder name is missing.', project)
+                console.error('Cannot download project, folder name is missing.', project);
                 return;
             }
 
@@ -264,14 +264,11 @@ export default {
             const downloadUrl = new URL(client.getFileDownloadLink(path));
 
             downloadUrl.searchParams.append('accept', 'zip')
-            console.log("href", downloadUrl.href);
-
             this.triggerDownload(downloadUrl.href);
         },
-        triggerDownload(href, filename = null) {
+        triggerDownload(href) {
             const link = document.createElement('a');
             link.href = href;
-            if (filename) link.download = filename;
             link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
@@ -292,7 +289,7 @@ export default {
             const status = this.statuses.find(s => s.id === project.status);
             return status ? status.label : 'Archived'; 
         }
-	},
+	}
 }
 </script>
 
