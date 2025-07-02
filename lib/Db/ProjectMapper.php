@@ -162,7 +162,7 @@ class ProjectMapper extends QBMapper {
         }
     }
 
-    public function findPrivateFolderForUser(int $projectId, string $userId): ?int {
+    public function findPrivateFolderForUser(int $projectId, string $userId): ?PrivateFolderLink {
         return $this->linkMapper->findByProjectAndUser($projectId, $userId);
     }
 

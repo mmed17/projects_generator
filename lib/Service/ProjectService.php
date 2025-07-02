@@ -322,7 +322,6 @@ class ProjectService {
                 'shared' => [$sharedFilesTree], 
                 'private' => $privateFilesTrees
             ];
-
             
         } catch (NotFoundException $e) {
             throw new Exception("Project folder is not found or has been deleted.");
