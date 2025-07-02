@@ -4,8 +4,9 @@ namespace OCA\ProjectCreatorAIO\Db;
 use DateTime;
 use OCP\AppFramework\Db\Entity;
 use OCP\DB\Types;
+use JsonSerializable;
 
-class Project extends Entity implements \JsonSerializable {
+class Project extends Entity implements JsonSerializable {
     public $id;
 
     protected ?string $name        = null;

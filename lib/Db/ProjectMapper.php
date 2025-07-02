@@ -5,10 +5,14 @@ namespace OCA\ProjectCreatorAIO\Db;
 use OCP\IDBConnection;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use DateTime;
 
 class ProjectMapper extends QBMapper {
     public const TABLE_NAME = "custom_projects";
-    public function __construct(IDBConnection $db) {
+    public function __construct(
+        IDBConnection $db,
+        private PrivateFolderLinkMapper $linkMapper
+    ) {
         parent::__construct($db, self::TABLE_NAME, Project::class);
     }
 
@@ -22,7 +26,8 @@ class ProjectMapper extends QBMapper {
         string $circleId,
         string $boardId,
         int    $folderId,
-        string $folderPath
+        string $folderPath,
+        array  $privateFolders,
     ) {
 
 		$project = new Project();
@@ -38,11 +43,22 @@ class ProjectMapper extends QBMapper {
         $project->setFolderId($folderId);
         $project->setFolderPath($folderPath);
 
-        $now = new \DateTime();
+        $now = new DateTime();
         $project->setCreatedAt($now);
         $project->setUpdatedAt($now);
 
-		return $this->insert($project);
+		$insertedProject = $this->insert($project);
+
+        foreach ($privateFolders as $privateFolder) {
+            $this->linkMapper->createLink(
+                $insertedProject->getId(),
+                $privateFolder['userId'],
+                $privateFolder['folderId'],
+                $privateFolder['path']
+            );
+        }
+
+        return $insertedProject;
 	}
 
     public function find(int $id) {
@@ -144,5 +160,16 @@ class ProjectMapper extends QBMapper {
         } catch (DoesNotExistException $e) {
             return null;
         }
+    }
+
+    public function findPrivateFolderForUser(int $projectId, string $userId): ?int {
+        return $this->linkMapper->findByProjectAndUser($projectId, $userId);
+    }
+
+    /**
+     * @return PrivateFolderLink[]
+     */
+    public function findAllPrivateFoldersByProject(int $projectId): array {
+        return $this->linkMapper->findByProject($projectId);
     }
 }

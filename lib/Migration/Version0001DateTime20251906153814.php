@@ -9,11 +9,13 @@ use OCP\Migration\IOutput;
 
 class Version0001DateTime20251906153814 extends SimpleMigrationStep {
 
+    public const TABLE_NAME = 'custom_projects';
     public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ISchemaWrapper {
         $schema = $schemaClosure();
 
-        if (!$schema->hasTable('custom_projects')) {
-            $table = $schema->createTable('custom_projects');
+        if (!$schema->hasTable(self::TABLE_NAME)) {
+            $table = $schema->createTable(self::TABLE_NAME);
+            
             $table->addColumn('id', 'integer', [
                 'autoincrement' => true,
                 'notnull' => true,
@@ -64,7 +66,7 @@ class Version0001DateTime20251906153814 extends SimpleMigrationStep {
             $table->addIndex(['owner_id'],'projectOwnerIdIndex', []);
             $table->addUniqueIndex(['circle_id'], 'projectCircleIdUnique');
         } else {
-            $table = $schema->getTable('custom_projects');
+            $table = $schema->getTable(self::TABLE_NAME);
             
             if($table->hasColumn('folder_name')) {
                 $table->dropColumn('folder_name');

@@ -48,6 +48,7 @@ class ProjectApiController extends Controller {
         string $address = '',
         string $description = '',
     ): DataResponse {
+
         try {
             $project = $this->projectService->createProject(
                 $name, 
@@ -62,6 +63,7 @@ class ProjectApiController extends Controller {
                 'message' => 'Project created successfully',
                 'projectId' => $project->getId(),
             ]);
+
         } catch (Throwable $e) {
             return new DataResponse([
                 'message' => 'Failed to create project: ' . $e->getMessage()
@@ -89,7 +91,7 @@ class ProjectApiController extends Controller {
      */
     public function getProjectFiles(int $projectId): DataResponse {
         $files = $this->projectService->getProjectFiles($projectId);
-        return new DataResponse($files);
+        return new DataResponse(['files' => $files]);
     }
     
     /**
@@ -98,11 +100,10 @@ class ProjectApiController extends Controller {
      *
      *  @return bool
      */
-    public function updateProjectStatus(int $projectId, int $status): bool {
+    public function updateProjectStatus(int $projectId, int $status): void {
         $this->projectMapper->updateProjectStatus($projectId, $status);
-        return true;
     }
-
+    
     /**
      * @NoCSRFRequired
      * @NoAdminRequired
